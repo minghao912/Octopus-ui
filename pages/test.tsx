@@ -2,7 +2,7 @@ import Peer from 'simple-peer';
 
 import { useState } from 'react';
 
-export default function Home() {
+export default function Test() {
     const [peer1, setPeer1] = useState<Peer.Instance>();
     const [peer2, setPeer2] = useState<Peer.Instance>();
 
@@ -65,10 +65,33 @@ export default function Home() {
         }
     }
 
+    function stringify(signalDataArr: Peer.SignalData[]): string[] {
+        if (!signalDataArr)
+            return [];
+
+        let tempArr = [] as string[];
+
+        signalDataArr.forEach(sd => {
+            tempArr.push(JSON.stringify(sd));
+        });
+
+        return tempArr;
+    }
+
     return (<>
-        <button onClick={newPeer}>Hello</button>
-        <button onClick={newPeer2}>Hello 2</button>
-        <button onClick={signal1}>Hello 3</button>
-        <button onClick={signal2}>Hello 4</button>
+        <div>
+            <button onClick={newPeer}>Hello</button>
+            <button onClick={newPeer2}>Hello 2</button>
+            <button onClick={signal1}>Hello 3</button>
+            <button onClick={signal2}>Hello 4</button>
+        </div>
+        <div>
+            <h2>Signal Data 1</h2>
+            {stringify(signalData1).map(sdStr => <p>{sdStr}</p>)}
+        </div>
+        <div>
+            <h2>Signal Data 2</h2>
+            {stringify(signalData2).map(sdStr => <p>{sdStr}</p>)}
+        </div>
     </>)
 }
