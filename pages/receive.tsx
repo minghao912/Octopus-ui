@@ -1,14 +1,32 @@
 import { useState, useEffect, ChangeEvent } from "react";
+import Peer from 'simple-peer';
 
 import { URL } from "../utils/urls";
+import styles from "../styles/temp.module.css";
 
-export default function Receive() {
+export default function Send() {
+    // Websocket data
     const [ws, setWS] = useState<WebSocket | null>(null);
-    const [userCode, setUserCode] = useState<string>("");
-    const [connected, setConnected] = useState<boolean>(false);
-    const [data, setData] = useState<string[]>([]);
+    const [WSConnected, setWSConnected] = useState<boolean>(false);
+    const [WSData, setWSData] = useState<string[]>([]);
+    const [remoteCode, setRemoteCode] = useState<string>("");
+
+    // WebRTC data
+    const [peer, setPeer] = useState<Peer.Instance | null>(null);
+    const [localSD, setLocalSD] = useState<Peer.SignalData[]>([]);
+    const [remoteSD, setRemoteSD] = useState<Peer.SignalData[]>([]);
+    const [peerConnected, setPeerConnected] = useState<boolean>(false);
+
+    // Message data
+    const [localMessage, setLocalMessage] = useState<string>("");
+    const [newestMessage, setNewestMessage] = useState<string>("");
 
     useEffect(() => {
+        let peer2 = new Peer();
+        setPeer(peer2);
+
+        console.log("Creating peer 2...");
+
         // Automatically close the websocket on unmount
         return () => {
             if (!ws) return;
@@ -18,25 +36,44 @@ export default function Receive() {
         }
     }, []);
 
-    function handleInput(e: ChangeEvent<HTMLInputElement>) {
-        setUserCode(e.target.value);
+    function handleCodeInput(e: ChangeEvent<HTMLInputElement>) {
+        setRemoteCode(e.target.value);
     }
 
-    function initializeWS() {
+    function handleInput(e: ChangeEvent<HTMLInputElement>) {
+        setLocalMessage(e.target.value);
+    }
+
+    // Initializes Websocket and Peer
+    function connect() {
+        _initWS()
+            .then(wsRef => _configPeer(wsRef));
+    }
+
+    function _initWS(): Promise<WebSocket> {
         const newWS = new WebSocket(URL + "/receive");
 
         newWS.onopen = (event) => {
-            setConnected(true);
+            setWSConnected(true);
 
-            newWS.send(userCode + ": INIT");
+            newWS.send(remoteCode + ": INIT");
         }
 
         newWS.onmessage = (event) => {
-            setData((oldData) => [...oldData, event.data]);
+            let msg = event.data as string;
+
+            if (msg.startsWith('{')) {
+                peer?.signal(JSON.parse(msg));
+                setRemoteSD((old) => [...old, JSON.parse(msg)]);
+            } else {
+                console.log(msg);
+            }
+
+            setWSData((oldData) => [...oldData, msg]);
         }
 
         newWS.onclose = (event) => {
-            setConnected(false);
+            setWSConnected(false);
         }
 
         newWS.onerror = (event) => {
@@ -44,23 +81,49 @@ export default function Receive() {
         }
 
         setWS(newWS);
+
+        return new Promise((resolve, reject) => {
+            resolve(newWS);
+        });
     }
 
-    function sendData() {
-        const signalData1 = `{"type":"answer","sdp":"v=0\r\no=- 265104266604323396 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE 0\r\na=extmap-allow-mixed\r\na=msid-semantic: WMS\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\nc=IN IP4 0.0.0.0\r\na=ice-ufrag:EDT9\r\na=ice-pwd:V2jmBsDWD66Fjy53aBw7ah6A\r\na=ice-options:trickle\r\na=fingerprint:sha-256 64:5E:E9:4C:29:7D:6A:7F:34:83:47:A0:CE:C5:A0:46:66:6B:EA:BF:64:13:BB:A2:43:F7:90:2A:F8:46:D3:D3\r\na=setup:active\r\na=mid:0\r\na=sctp-port:5000\r\na=max-message-size:262144\r\n"}`;
-        const signalData2 = `{"type":"candidate","candidate":{"candidate":"candidate:1967928008 1 udp 2113937151 53c2e6c4-5d6a-4c55-8dd2-bcafa0e1c11e.local 60165 typ host generation 0 ufrag EDT9 network-cost 999","sdpMLineIndex":0,"sdpMid":"0"}}`;
+    function _configPeer(wsRef: WebSocket) {
+        if (!peer) {
+            console.error("Peer is null!");
+            return;
+        }
 
-        ws?.send(userCode + ": " + signalData1);
-        ws?.send(userCode + ": " + signalData2);
+        peer.on('signal', data => {
+            // Send this to server
+            console.log("Peer 2, signal data get");
+            wsRef.send(remoteCode + ": " + JSON.stringify(data));
+
+            setLocalSD(prevSignalData => [...prevSignalData, data]);
+        })
+
+        peer.on('data', data => {
+            console.log("Got a message: " + data);
+            setNewestMessage(data.toString());
+        })
+
+        peer.on('connect', () => {
+            console.log("Peer 2, connection detected");
+            setPeerConnected(true);
+        })
     }
 
-    return <>
-        <input onChange={handleInput}></input>
-        <button onClick={initializeWS}>OK</button>
-        <button onClick={sendData}>Send</button>
-        <h2>Connecting as: {userCode}</h2>
-        <p>Socket 2 (SEND) is {connected ? <span style={{color: "green"}}>connected</span> : <span style={{color: "red"}}>disconnected</span>}</p>
-        <h2>Messages</h2>
-        {data && data.map(e => <p>{e}</p>)}
-    </>;
+    function sendMessage() {
+        peer?.send(localMessage);
+    }
+
+    return <div className={styles.main}>
+        <input onChange={handleCodeInput}></input>
+        <button onClick={connect}>Connect</button>
+        <h2>{WSConnected ? <span style={{color: "green"}}>Connected</span> : <span style={{color: "red"}}>Disconnected</span>}</h2>
+        {(WSConnected && !peerConnected) ? <h2>Waiting for remote connection...</h2> : null}
+        <input onChange={handleInput} disabled={!peerConnected}></input>
+        <button onClick={sendMessage} disabled={!peerConnected}>Send</button>
+        <h2>From Remote</h2>
+        {newestMessage && <p>{newestMessage}</p>}
+    </div>;
 }

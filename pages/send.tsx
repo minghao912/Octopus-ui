@@ -1,11 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
+import Peer from 'simple-peer';
 
 import { URL } from "../utils/urls";
+import styles from "../styles/temp.module.css";
 
 export default function Send() {
-    const [connected, setConnected] = useState<boolean>(false);
-    const [code, setCode] = useState<string[]>([]);
+    // Websocket data
     const [ws, setWS] = useState<WebSocket | null>(null);
+    const [WSConnected, setWSConnected] = useState<boolean>(false);
+    const [WSData, setWSData] = useState<string[]>([]);
+    const [remoteCode, setRemoteCode] = useState<string>("");
+
+    // WebRTC data
+    const [peer, setPeer] = useState<Peer.Instance | null>(null);
+    const [localSD, setLocalSD] = useState<Peer.SignalData[]>([]);
+    const [remoteSD, setRemoteSD] = useState<Peer.SignalData[]>([]);
+    const [peerConnected, setPeerConnected] = useState<boolean>(false);
+
+    // Message data
+    const [localMessage, setLocalMessage] = useState<string>("");
+    const [newestMessage, setNewestMessage] = useState<string>("");
 
     useEffect(() => {
         // Automatically close the websocket on unmount
@@ -17,21 +31,56 @@ export default function Send() {
         }
     }, []);
 
-    function initializeSend() {
+    function handleInput(e: ChangeEvent<HTMLInputElement>) {
+        setLocalMessage(e.target.value);
+    }
+
+    // Initializes Websocket and Peer
+    function start() {
+        _initPeer()
+            .then(p => _initWS(p[0], p[1]))
+            .catch(err => console.error(err));
+    }
+
+    function _initWS(peerRef: Peer.Instance, peerSD: Peer.SignalData[]) {
         const newWS = new WebSocket(URL + "/send");
 
         newWS.onopen = (event) => {
-            setConnected(true);
+            setWSConnected(true);
 
             newWS.send("INIT");
         }
 
         newWS.onmessage = (event) => {
-            setCode((oldCode) => [...oldCode, event.data]);
+            let msg = event.data as string;
+
+            // The first message should be a code (entirely numbers)
+            if (/^\d+$/.test(msg)) {
+                // Store it for use
+                setRemoteCode(msg);
+
+                // Send Peer 1's signal data
+                for (const sd of peerSD)
+                    newWS.send(msg + ": " + JSON.stringify(sd));
+            }
+
+            // All other messages should be the remote peer's signal data
+            else if (msg.startsWith('{')) {
+                console.log("Remote SD received. Signalling local Peer.");
+                peerRef.signal(JSON.parse(msg));
+                setRemoteSD((old) => [...old, JSON.parse(msg)]);
+            } 
+            
+            // Probably an error if we get here
+            else {    
+                console.log(msg);
+            }
+
+            setWSData((oldData) => [...oldData, msg]);
         }
 
         newWS.onclose = (event) => {
-            setConnected(false);
+            setWSConnected(false);
         }
 
         newWS.onerror = (event) => {
@@ -41,19 +90,52 @@ export default function Send() {
         setWS(newWS);
     }
 
-    function sendWebRTCData() {
-        const signalData1 = `{"type":"offer","sdp":"v=0\r\no=- 948512473557000494 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=group:BUNDLE 0\r\na=extmap-allow-mixed\r\na=msid-semantic: WMS\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\nc=IN IP4 0.0.0.0\r\na=ice-ufrag:9hQt\r\na=ice-pwd:SYBR7HzGmk4aObh4flmu198v\r\na=ice-options:trickle\r\na=fingerprint:sha-256 E0:81:DD:18:5F:03:5F:4B:C5:91:7C:D8:F7:DF:5B:79:10:A3:D2:B6:04:75:90:E8:B8:00:C8:49:7F:A3:EC:EC\r\na=setup:actpass\r\na=mid:0\r\na=sctp-port:5000\r\na=max-message-size:262144\r\n"}`;
-        const signalData2 = `{"type":"candidate","candidate":{"candidate":"candidate:1721207964 1 udp 2113937151 53c2e6c4-5d6a-4c55-8dd2-bcafa0e1c11e.local 51458 typ host generation 0 ufrag 9hQt network-cost 999","sdpMLineIndex":0,"sdpMid":"0"}}`;
+    function _initPeer(): Promise<[Peer.Instance, Peer.SignalData[]]> {
+        return new Promise((resolve, reject) => {
+            let peer1 = new Peer({initiator: true});
+            setPeer(peer1);
 
-        ws?.send(code[0] + ": " + signalData1);
-        ws?.send(code[0] + ": " + signalData2);
+            let sd: Peer.SignalData[] = [];
+
+            peer1.on('signal', data => {
+                // Send this to server
+                console.log("Starting peer 1, signal data get. Appending to local array.");
+                setLocalSD(prevSignalData => [...prevSignalData, data]);
+                sd.push(data);
+
+                // Two signal data means OK
+                if (sd.length >= 2) {
+                    resolve([peer1, sd]);
+                }
+            })
+
+            peer1.on('connect', () => {
+                console.log("Connection detected by peer 1");
+                setPeerConnected(true);
+            })
+
+            peer1.on('data', (data) => {
+                console.log("Got a message: " + data);
+                setNewestMessage(data.toString());
+            })
+
+            peer1.on('error', (err) => {
+                reject(err);
+            })
+        });
     }
 
-    return <>
-        <button onClick={initializeSend}>Start</button>
-        <button onClick={sendWebRTCData}>Send Data</button>
-        <p>Socket 1 (SEND) is {connected ? <span style={{color: "green"}}>connected</span> : <span style={{color: "red"}}>disconnected</span>}</p>
-        <h2>Messages</h2>
-        {code && code.map(e => <p>{e}</p>)}
-    </>;
+    function sendMessage() {
+        peer?.send(localMessage);
+    }
+
+    return <div className={styles.main}>
+        <button onClick={start}>Start</button>
+        <h2>{WSConnected ? <><span style={{color: "green"}}>Connected</span> {remoteCode}</> : <span style={{color: "red"}}>Disconnected</span>}</h2>
+        {(WSConnected && !peerConnected) ? <h2>Waiting for remote connection...</h2> : null}
+        <input onChange={handleInput} disabled={!peerConnected}></input>
+        <button onClick={sendMessage} disabled={!peerConnected}>Send</button>
+        <h2>From Remote</h2>
+        {newestMessage && <p>{newestMessage}</p>}
+    </div>;
 }
