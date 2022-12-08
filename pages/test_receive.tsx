@@ -91,6 +91,6 @@ export default function Receive() {
         <h2>Connecting as: {userCode}</h2>
         <p>Socket 2 (SEND) is {connected ? <span style={{color: "green"}}>connected</span> : <span style={{color: "red"}}>disconnected</span>}</p>
         <h2>Messages</h2>
-        {data && data.map(e => <p>{e}</p>)}
+        {data && data.map((e, ind) => <p key={ind}>{e}</p>)}
     </>;
 }

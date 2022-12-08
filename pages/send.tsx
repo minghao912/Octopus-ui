@@ -29,6 +29,7 @@ export default function Send() {
             ws.onopen = ws.onmessage = ws.onclose = ws.onerror = null;
             ws.close();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     function handleInput(e: ChangeEvent<HTMLInputElement>) {

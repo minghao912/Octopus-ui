@@ -87,11 +87,11 @@ export default function Test() {
         </div>
         <div>
             <h2>Signal Data 1</h2>
-            {stringify(signalData1).map(sdStr => <p>{sdStr}</p>)}
+            {stringify(signalData1).map((sdStr, ind) => <p key={ind}>{sdStr}</p>)}
         </div>
         <div>
             <h2>Signal Data 2</h2>
-            {stringify(signalData2).map(sdStr => <p>{sdStr}</p>)}
+            {stringify(signalData2).map((sdStr, ind) => <p key={ind}>{sdStr}</p>)}
         </div>
     </>)
 }

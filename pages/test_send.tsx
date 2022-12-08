@@ -92,6 +92,6 @@ export default function Send() {
         <button onClick={readPeerSignal}>Read Incoming Signal Data</button>
         <p>Socket 1 (SEND) is {connected ? <span style={{color: "green"}}>connected</span> : <span style={{color: "red"}}>disconnected</span>}</p>
         <h2>Messages</h2>
-        {data && data.map(e => <p>{e}</p>)}
+        {data && data.map((e, ind) => <p key={ind}>{e}</p>)}
     </>;
 }
