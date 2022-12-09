@@ -1,6 +1,6 @@
 version: "3.9"
 services:
   server:
-    build: .
+    image: octopus-ui
     ports:
       - "8089:8089"
