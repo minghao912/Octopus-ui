@@ -22,7 +22,16 @@ export default function Send() {
     const [newestMessage, setNewestMessage] = useState<string>("");
 
     useEffect(() => {
-        let peer2 = new Peer();
+        let peer2 = new Peer({
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' }, 
+                    { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
+                    { urls: 'stun:stun.qq.com:3478' },
+                    { urls: 'stun:stun2.l.google.com:19302' }
+                ]
+            }
+        });
         setPeer(peer2);
 
         console.log("Creating peer 2...");

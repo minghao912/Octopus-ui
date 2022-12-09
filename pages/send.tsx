@@ -68,6 +68,7 @@ export default function Send() {
             // All other messages should be the remote peer's signal data
             else if (msg.startsWith('{')) {
                 console.log("Remote SD received. Signalling local Peer.");
+                console.log(msg);
                 peerRef.signal(JSON.parse(msg));
                 setRemoteSD((old) => [...old, JSON.parse(msg)]);
             } 
@@ -93,7 +94,17 @@ export default function Send() {
 
     function _initPeer(): Promise<[Peer.Instance, Peer.SignalData[]]> {
         return new Promise((resolve, reject) => {
-            let peer1 = new Peer({initiator: true});
+            let peer1 = new Peer({
+                initiator: true,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' }, 
+                        { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
+                        { urls: 'stun:stun.qq.com:3478' },
+                        { urls: 'stun:stun2.l.google.com:19302' }
+                    ]
+                }
+            });
             setPeer(peer1);
 
             let sd: Peer.SignalData[] = [];
@@ -103,11 +114,6 @@ export default function Send() {
                 console.log("Starting peer 1, signal data get. Appending to local array.");
                 setLocalSD(prevSignalData => [...prevSignalData, data]);
                 sd.push(data);
-
-                // Two signal data means OK
-                if (sd.length >= 2) {
-                    resolve([peer1, sd]);
-                }
             })
 
             peer1.on('connect', () => {
@@ -123,6 +129,10 @@ export default function Send() {
             peer1.on('error', (err) => {
                 reject(err);
             })
+
+            setTimeout(() => {
+                resolve([peer1, sd]);
+            }, 600);
         });
     }
 
