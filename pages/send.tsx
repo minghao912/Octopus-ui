@@ -1,5 +1,4 @@
 import { useState, useEffect, ChangeEvent } from "react";
-import Peer from 'simple-peer';
 
 import { URL } from "../utils/urls";
 import styles from "../styles/temp.module.css";
@@ -11,15 +10,8 @@ export default function Send() {
     const [WSData, setWSData] = useState<string[]>([]);
     const [remoteCode, setRemoteCode] = useState<string>("");
 
-    // WebRTC data
-    const [peer, setPeer] = useState<Peer.Instance | null>(null);
-    const [localSD, setLocalSD] = useState<Peer.SignalData[]>([]);
-    const [remoteSD, setRemoteSD] = useState<Peer.SignalData[]>([]);
-    const [peerConnected, setPeerConnected] = useState<boolean>(false);
-
     // Message data
     const [localMessage, setLocalMessage] = useState<string>("");
-    const [newestMessage, setNewestMessage] = useState<string>("");
 
     useEffect(() => {
         // Automatically close the websocket on unmount
@@ -36,14 +28,8 @@ export default function Send() {
         setLocalMessage(e.target.value);
     }
 
-    // Initializes Websocket and Peer
+    // Initializes Websocket
     function start() {
-        _initPeer()
-            .then(p => _initWS(p[0], p[1]))
-            .catch(err => console.error(err));
-    }
-
-    function _initWS(peerRef: Peer.Instance, peerSD: Peer.SignalData[]) {
         const newWS = new WebSocket(URL + "/send");
 
         newWS.onopen = (event) => {
@@ -59,21 +45,8 @@ export default function Send() {
             if (/^\d+$/.test(msg)) {
                 // Store it for use
                 setRemoteCode(msg);
-
-                // Send Peer 1's signal data
-                for (const sd of peerSD)
-                    newWS.send(msg + ": " + JSON.stringify(sd));
             }
-
-            // All other messages should be the remote peer's signal data
-            else if (msg.startsWith('{')) {
-                console.log("Remote SD received. Signalling local Peer.");
-                console.log(msg);
-                peerRef.signal(JSON.parse(msg));
-                setRemoteSD((old) => [...old, JSON.parse(msg)]);
-            } 
-            
-            // Probably an error if we get here
+            // Just the OKs
             else {    
                 console.log(msg);
             }
@@ -92,75 +65,20 @@ export default function Send() {
         setWS(newWS);
     }
 
-    function _initPeer(): Promise<[Peer.Instance, Peer.SignalData[]]> {
-        return new Promise((resolve, reject) => {
-            let peer1 = new Peer({
-                initiator: true,
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' }, 
-                        { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
-                        { urls: "stun:openrelay.metered.ca:80" },
-                        {
-                            urls: "turn:openrelay.metered.ca:80",
-                            username: "openrelayproject",
-                            credential: "openrelayproject"
-                        },
-                        {
-                            urls: "turn:openrelay.metered.ca:443",
-                            username: "openrelayproject",
-                            credential: "openrelayproject"
-                        },
-                        {
-                            urls: "turn:openrelay.metered.ca:443?transport=tcp",
-                            username: "openrelayproject",
-                            credential: "openrelayproject"
-                        }
-                    ]
-                }
-            });
-            setPeer(peer1);
-
-            let sd: Peer.SignalData[] = [];
-
-            peer1.on('signal', data => {
-                // Send this to server
-                console.log("Starting peer 1, signal data get. Appending to local array.");
-                setLocalSD(prevSignalData => [...prevSignalData, data]);
-                sd.push(data);
-            })
-
-            peer1.on('connect', () => {
-                console.log("Connection detected by peer 1");
-                setPeerConnected(true);
-            })
-
-            peer1.on('data', (data) => {
-                console.log("Got a message: " + data);
-                setNewestMessage(data.toString());
-            })
-
-            peer1.on('error', (err) => {
-                reject(err);
-            })
-
-            setTimeout(() => {
-                resolve([peer1, sd]);
-            }, 600);
-        });
-    }
-
     function sendMessage() {
-        peer?.send(localMessage);
+        if (!ws) {
+            console.error("WS is null!");
+            return;
+        }
+
+        ws.send(remoteCode + ": " + localMessage);
     }
 
     return <div className={styles.main}>
         <button onClick={start}>Start</button>
         <h2>{WSConnected ? <><span style={{color: "green"}}>Connected</span> {remoteCode}</> : <span style={{color: "red"}}>Disconnected</span>}</h2>
-        {(WSConnected && !peerConnected) ? <h2>Waiting for remote connection...</h2> : null}
-        <input onChange={handleInput} disabled={!peerConnected}></input>
-        <button onClick={sendMessage} disabled={!peerConnected}>Send</button>
+        <input onChange={handleInput} disabled={!WSConnected}></input>
+        <button onClick={sendMessage} disabled={!WSConnected}>Send</button>
         <h2>From Remote</h2>
-        {newestMessage && <p>{newestMessage}</p>}
     </div>;
 }
