@@ -79,6 +79,5 @@ export default function Send() {
         <h2>{WSConnected ? <><span style={{color: "green"}}>Connected</span> {remoteCode}</> : <span style={{color: "red"}}>Disconnected</span>}</h2>
         <input onChange={handleInput} disabled={!WSConnected}></input>
         <button onClick={sendMessage} disabled={!WSConnected}>Send</button>
-        <h2>From Remote</h2>
     </div>;
 }

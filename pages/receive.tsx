@@ -66,7 +66,7 @@ export default function Send() {
         <input onChange={handleCodeInput}></input>
         <button onClick={connect}>Connect</button>
         <h2>{WSConnected ? <span style={{color: "green"}}>Connected</span> : <span style={{color: "red"}}>Disconnected</span>}</h2>
-        <h2>From Remote</h2>
+        <h2>Incoming Message</h2>
         {newestMessage && <p>{newestMessage}</p>}
     </div>;
 }
