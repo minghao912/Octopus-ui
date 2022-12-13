@@ -3,3 +3,29 @@
     height: 60vh;
     background-color: rgba(255, 255, 255, 0.6);
 }
+
+.raise:hover {
+  box-shadow: 0 0.5em 0.5em -0.4em #ECDCFF;
+  transform: translateY(-0.5em);
+}
+
+.raise {
+    transition: 0.25s ease-in-out;
+}
+
+.flyAway {
+    animation: ani-flyAway 0.25s;
+    -moz-animation: ani-flyAway 0.25s; /* Firefox */
+    -webkit-animation: ani-flyAway 0.25s; /* Safari and Chrome */
+    -o-animation: ani-flyAway 0.25s; /* Opera */
+}
+
+@keyframes ani-flyAway {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
