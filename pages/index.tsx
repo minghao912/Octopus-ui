@@ -23,7 +23,10 @@ enum SR {
 export default function Home() {
     const [currentContent, setCurrentContent] = useState<JSX.Element>(_getContent(STEP.ONE, null));
 
-    function _userAction(sr: SR) {
+    function _userAction(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, sr: SR) {
+        // Make sure button click works on first click
+        e.persist();
+
         // Do fly away transition
         let f = document.querySelector('.fade-item');
         f?.classList.add(styles.flyAway);
@@ -43,12 +46,8 @@ export default function Home() {
                 direction="column"
                 justifyContent="center"
                 alignItems="space-around"
-                sx={{
-                    width: '100%',
-                    height: '100%',
-                    margin: 0
-                }}
-                className="fade-item"
+                sx={{ margin: 0 }}
+                className={["fade-item", styles.maxWH].join(" ")}
             >
                 <Grid item>
                     <Typography 
@@ -67,28 +66,16 @@ export default function Home() {
                         direction="row"
                         justifyContent="space-around"
                         alignItems="center"
-                        sx={{
-                            width: '100%',
-                            height: '100%'
-                        }}
+                        className={styles.maxWH}
                     >
                         <Grid item 
                             xs={5}
-                            sx={{
-                            width: '100%',
-                            height: '100%'
-                            }}
+                            className={styles.maxWH}
                         >
                             <Button
                                 variant="outlined"
-                                sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    padding: 5,
-                                    borderRadius: '16px',
-                                }}
-                                className={styles.raise}
-                                onClick={(e) => _userAction(SR.SEND)}
+                                className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
+                                onClick={(e) => _userAction(e, SR.SEND)}
                             >
                                 <Grid
                                     container
@@ -118,20 +105,12 @@ export default function Home() {
                         </Grid>
                         <Grid item 
                             xs={5}
-                            sx={{
-                            width: '100%',
-                            height: '100%'
-                            }}
+                            className={styles.maxWH}
                         >
                             <Button
                                 variant="outlined"
-                                sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: '16px',
-                                }}
-                                className={styles.raise}
-                                onClick={(e) => _userAction(SR.RECEIVE)}
+                                className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
+                                onClick={(e) => _userAction(e, SR.RECEIVE)}
                             >
                                 <Grid
                                     container
@@ -173,11 +152,8 @@ export default function Home() {
                 direction="column"
                 justifyContent="center"
                 alignItems="space-around"
-                sx={{
-                    width: '100%',
-                    height: '100%',
-                    margin: 0
-                }}
+                className={styles.maxWH}
+                sx={{ margin: 0 }}
             >
                 <Grid item>
                     <Typography 
@@ -196,27 +172,15 @@ export default function Home() {
                         direction="row"
                         justifyContent="space-around"
                         alignItems="center"
-                        sx={{
-                            width: '100%',
-                            height: '100%'
-                        }}
+                        className={styles.maxWH}
                     >
                         <Grid item 
                             xs={5}
-                            sx={{
-                                width: '100%',
-                                height: '100%'
-                            }}
+                            className={styles.maxWH}
                         >
                             <Button
                                 variant="outlined"
-                                sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    padding: 5,
-                                    borderRadius: '16px',
-                                }}
-                                className={styles.raise}
+                                className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
                             >
                                 <Link href={sr == SR.SEND ? "/send-text" : "/receive-text"}>
                                     <Grid
@@ -225,10 +189,7 @@ export default function Home() {
                                         direction="column"
                                         justifyContent="center"
                                         alignItems="center"
-                                        sx={{
-                                            width: '100%',
-                                            height: '100%'
-                                        }}
+                                        className={styles.maxWH}
                                     >
                                         <Grid item sx={{maxWidth: '100%'}}>
                                             <FontAwesomeIcon 
@@ -251,19 +212,11 @@ export default function Home() {
                         </Grid>
                         <Grid item 
                             xs={5}
-                            sx={{
-                                width: '100%',
-                                height: '100%'
-                            }}
+                            className={styles.maxWH}
                         >
                             <Button
                                 variant="outlined"
-                                sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    borderRadius: '16px',
-                                }}
-                                className={styles.raise}
+                                className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
                             >
                                 <Link href={sr == SR.SEND ? "/send-file" : "/receive-file"} as="div">
                                     <Grid
@@ -272,10 +225,7 @@ export default function Home() {
                                         direction="column"
                                         justifyContent="center"
                                         alignItems="center"
-                                        sx={{
-                                            width: '100%',
-                                            height: '100%'
-                                        }}
+                                        className={styles.maxWH}
                                     >
                                         <Grid item sx={{maxWidth: '100%'}}>
                                             <FontAwesomeIcon 
@@ -307,9 +257,14 @@ export default function Home() {
         spacing={0}
         alignItems="center"
         justifyContent="center"
-        style={{ minHeight: '100vh', paddingLeft: '15%', paddingRight: '15%' }}
+        style={{
+            minHeight: '100vh', 
+            minWidth: 'calc(640px * 1.3)', 
+            paddingLeft: '15%', 
+            paddingRight: '15%' 
+        }}
     >
-        <Grid item xs={8}>
+        <Grid item xs={8} style={{minHeight: '480px', minWidth: '640px'}}>
             <Card
                 sx={{ 
                     borderRadius: '16px',
@@ -319,9 +274,8 @@ export default function Home() {
                 className={styles.card}
             >
                 <CardContent
-                    style={{ height: '100%', width: '100%' }}
+                    className={styles.maxWH}
                 >
-                    
                     {currentContent}
                 </CardContent>
             </Card>

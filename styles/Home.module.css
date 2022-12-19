@@ -13,6 +13,16 @@
     transition: 0.25s ease-in-out;
 }
 
+.maxWH {
+    height: 100%;
+    width: 100%;
+}
+
+.roundButton {
+    border-radius: 16px;
+    padding: 1em;
+}
+
 .flyAway {
     animation: ani-flyAway 0.25s;
     -moz-animation: ani-flyAway 0.25s; /* Firefox */
