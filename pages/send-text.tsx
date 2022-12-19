@@ -1,10 +1,10 @@
 import { useState, useEffect, ChangeEvent } from "react";
 
-import CenteredCard from "../components/CenteredCard";
-
 import { URL } from "../utils/urls";
 import { removeCode } from "../utils/delete";
 import styles from "../styles/temp.module.css";
+
+import CenteredCard from "../components/CenteredCard";
 
 export default function Send() {
     // Websocket data

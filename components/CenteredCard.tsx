@@ -11,7 +11,8 @@ export default function CenteredCard(props: any): JSX.Element {
         alignItems="center"
         justifyContent="center"
         style={{
-            minHeight: '100vh', 
+            minHeight: 'calc(480px * 1.4)', 
+            height: '100vh',
             minWidth: 'calc(640px * 1.3)', 
             paddingLeft: '15%', 
             paddingRight: '15%' 

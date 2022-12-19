@@ -1,7 +1,6 @@
 import '../styles/globals.css'
 
 import type { AppProps } from 'next/app'
-import Head from 'next/head'
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
@@ -16,13 +15,9 @@ export default function App({ Component, pageProps }: AppProps) {
     }
   })
 
-  return <>
-    <Head>
-      <link rel="stylesheet"
-            href="https://fonts.googleapis.com/css?family=Mulish" />
-    </Head>
+  return (
     <ThemeProvider theme={theme}>
       <Component {...pageProps} />
     </ThemeProvider>
-  </>
+  );
 }

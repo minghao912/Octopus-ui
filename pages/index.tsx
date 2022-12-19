@@ -7,10 +7,10 @@ import { faPaperPlane, faArrowDownLong, faT, faFile } from '@fortawesome/free-so
 
 import { useState } from 'react';
 
-import CenteredCard from '../components/CenteredCard';
-
 import styles from '../styles/home.module.css';
 import Link from 'next/link';
+
+import CenteredCard from '../components/CenteredCard';
 
 enum STEP {
     ONE, TWO
