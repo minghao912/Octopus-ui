@@ -1,6 +1,4 @@
 import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import Grid from '@mui/material/Grid';
 import Typography from '@mui/material/Typography';
 
@@ -9,9 +7,10 @@ import { faPaperPlane, faArrowDownLong, faT, faFile } from '@fortawesome/free-so
 
 import { useState } from 'react';
 
+import CenteredCard from '../components/CenteredCard';
+
 import styles from '../styles/home.module.css';
 import Link from 'next/link';
-import CenteredCard from '../components/CenteredCard';
 
 enum STEP {
     ONE, TWO
@@ -253,7 +252,9 @@ export default function Home() {
         } else return <></>;
     }
 
-    return (<CenteredCard>
-        {currentContent}
-    </CenteredCard>);
+    return (
+        <CenteredCard>
+            {currentContent}
+        </CenteredCard>
+    );
 }

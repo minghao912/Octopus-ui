@@ -1,5 +1,7 @@
 import { useState, useEffect, ChangeEvent } from "react";
 
+import CenteredCard from "../components/CenteredCard";
+
 import { URL } from "../utils/urls";
 import { removeCode } from "../utils/delete";
 import styles from "../styles/temp.module.css";
@@ -97,10 +99,14 @@ export default function Send() {
             return <span style={{color: "red", fontWeight: "bold"}}>ERROR</span>;
     }
 
-    return <div className={styles.main}>
-        <button onClick={start}>Start</button>
-        <h2>{<>{_connectionStatus()} {remoteCode}</>}</h2>
-        <input onChange={handleInput} disabled={!WSConnected}></input>
-        <button onClick={sendMessage} disabled={!WSConnected}>Send</button>
-    </div>;
+    return (
+        <CenteredCard>
+            <div className={styles.main}>
+                <button onClick={start}>Start</button>
+                <h2>{<>{_connectionStatus()} {remoteCode}</>}</h2>
+                <input onChange={handleInput} disabled={!WSConnected}></input>
+                <button onClick={sendMessage} disabled={!WSConnected}>Send</button>
+            </div>
+        </CenteredCard>
+    );
 }

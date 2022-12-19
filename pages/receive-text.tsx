@@ -1,5 +1,7 @@
 import { useState, useEffect, ChangeEvent } from "react";
 
+import CenteredCard from "../components/CenteredCard";
+
 import { URL } from "../utils/urls";
 import styles from "../styles/temp.module.css";
 
@@ -62,11 +64,15 @@ export default function Send() {
         setWS(newWS);
     }
 
-    return <div className={styles.main}>
-        <input onChange={handleCodeInput}></input>
-        <button onClick={connect}>Connect</button>
-        <h2>{WSConnected ? <span style={{color: "green"}}>Connected</span> : <span style={{color: "red"}}>Disconnected</span>}</h2>
-        <h2>Incoming Message</h2>
-        {newestMessage && <p>{newestMessage}</p>}
-    </div>;
+    return (
+        <CenteredCard>
+            <div className={styles.main}>
+                <input onChange={handleCodeInput}></input>
+                <button onClick={connect}>Connect</button>
+                <h2>{WSConnected ? <span style={{color: "green"}}>Connected</span> : <span style={{color: "red"}}>Disconnected</span>}</h2>
+                <h2>Incoming Message</h2>
+                {newestMessage && <p>{newestMessage}</p>}
+            </div>
+        </CenteredCard>
+    );
 }
