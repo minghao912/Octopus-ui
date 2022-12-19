@@ -178,11 +178,11 @@ export default function Home() {
                             xs={5}
                             className={styles.maxWH}
                         >
-                            <Button
-                                variant="outlined"
-                                className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
-                            >
-                                <Link href={sr == SR.SEND ? "/send-text" : "/receive-text"}>
+                            <Link href={sr == SR.SEND ? "/send-text" : "/receive-text"} passHref={true}>
+                                <Button
+                                    variant="outlined"
+                                    className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
+                                >                                
                                     <Grid
                                         container
                                         rowSpacing={4}
@@ -207,18 +207,18 @@ export default function Home() {
                                             </Typography>
                                         </Grid>
                                     </Grid>
-                                </Link>
-                            </Button>
+                                </Button>
+                            </Link>
                         </Grid>
                         <Grid item 
                             xs={5}
                             className={styles.maxWH}
                         >
-                            <Button
-                                variant="outlined"
-                                className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
-                            >
-                                <Link href={sr == SR.SEND ? "/send-file" : "/receive-file"} as="div">
+                            <Link href={sr == SR.SEND ? "/send-file" : "/receive-file"} passHref={true}>
+                                <Button
+                                    variant="outlined"
+                                    className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
+                                >
                                     <Grid
                                         container
                                         rowSpacing={4}
@@ -243,8 +243,8 @@ export default function Home() {
                                             </Typography>
                                         </Grid>
                                     </Grid>
-                                </Link>
-                            </Button>
+                                </Button>
+                            </Link>
                         </Grid>
                     </Grid>
                 </Grid>
