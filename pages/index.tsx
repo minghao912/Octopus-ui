@@ -59,7 +59,7 @@ export default function Home() {
                         I want to
                     </Typography>
                 </Grid>
-                <Grid item>
+                <Grid item sx={{ height: '80%' }}>
                     <Grid
                         container
                         spacing={1}
