@@ -92,9 +92,9 @@ export default function Send() {
         if (!WSConnected)
             return <span style={{color: "red"}}>Disconnected</span>;
         else if (WSConnected && !remoteConnected)
-            return <span style={{color: "#FFBF00"}}>Waiting for remote connection on</span>;    // FFBF00 is amber
+            return <><span style={{color: "#FF9F00"}}>Waiting for remote connection</span> on {remoteCode}</>;    // FFBF00 is amber
         else if (WSConnected && remoteConnected)
-            return <span style={{color: "green"}}>Connected on</span>;
+            return <><span style={{color: "green"}}>Connected</span> on {remoteCode}</>;
         else    // Should never get here
             return <span style={{color: "red", fontWeight: "bold"}}>ERROR</span>;
     }
@@ -103,7 +103,7 @@ export default function Send() {
         <CenteredCard>
             <div className={styles.main}>
                 <button onClick={start}>Start</button>
-                <h2>{<>{_connectionStatus()} {remoteCode}</>}</h2>
+                <h2>{_connectionStatus()}</h2>
                 <input onChange={handleInput} disabled={!WSConnected}></input>
                 <button onClick={sendMessage} disabled={!WSConnected}>Send</button>
             </div>
