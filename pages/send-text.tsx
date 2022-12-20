@@ -92,7 +92,7 @@ export default function Send() {
         if (!WSConnected)
             return <span style={{color: "red"}}>Disconnected</span>;
         else if (WSConnected && !remoteConnected)
-            return <><span style={{color: "#FF9F00"}}>Waiting for remote connection</span> on {remoteCode}</>;    // FFBF00 is amber
+            return <><span style={{color: "#FF9F00"}}>Waiting for remote connection</span> on {remoteCode}</>;    // FF9F00 is amber
         else if (WSConnected && remoteConnected)
             return <><span style={{color: "green"}}>Connected</span> on {remoteCode}</>;
         else    // Should never get here
