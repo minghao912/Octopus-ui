@@ -104,8 +104,8 @@ export default function Send() {
             <div className={styles.main}>
                 <button onClick={start}>Start</button>
                 <h2>{_connectionStatus()}</h2>
-                <input onChange={handleInput} disabled={!WSConnected}></input>
-                <button onClick={sendMessage} disabled={!WSConnected}>Send</button>
+                <input onChange={handleInput} disabled={!remoteConnected}></input>
+                <button onClick={sendMessage} disabled={!remoteConnected}>Send</button>
             </div>
         </CenteredCard>
     );
