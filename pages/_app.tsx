@@ -12,6 +12,11 @@ export default function App({ Component, pageProps }: AppProps) {
   const theme = createTheme({
     typography: {
       fontFamily: "Mulish, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif"
+    },
+    palette: {
+      primary: {
+        main: "#ae17ff"
+      }
     }
   })
 

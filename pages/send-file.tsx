@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
+import Dropzone from "react-dropzone";
 
 import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
 import { base64Encode } from "../utils/encoder";
 import { URL } from "../utils/urls";
@@ -34,9 +39,8 @@ export default function Send(props: any) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [remoteCode]);
 
-    function _fileChangeHandler(e: React.ChangeEvent<HTMLInputElement>) {
-        let file = (e.target as HTMLInputElement & EventTarget).files![0];
-        setSelectedFile(file);
+    function _fileChangeHandler(files: File[]) {
+        setSelectedFile(files[0]);
         setFileSelected(true);
     }
 
@@ -74,6 +78,7 @@ export default function Send(props: any) {
 
         newWS.onerror = (event) => {
             console.error(event);
+            setWSConnected(false);
         }
 
         setWS(newWS);
@@ -141,30 +146,99 @@ export default function Send(props: any) {
             return <span style={{color: "red", fontWeight: "bold"}}>ERROR</span>;
     }
 
+    function _dropzoneText(): JSX.Element {
+        function _getHumanReadableSize(bytes: number): string {
+            function _toThreeDigits(num: number): number {
+                return Math.round((num + Number.EPSILON) * 10) / 10;
+            }
+
+            let kb, mb, gb;
+            if ((kb = bytes / 1000) < 1)
+                return `${_toThreeDigits(bytes)} B`;
+            else if ((mb = kb / 1000) < 1)
+                return `${_toThreeDigits(kb)} KB`;
+            else if ((gb = mb / 1000) < 1)
+                return `${_toThreeDigits(mb)} MB`;
+            else return `${_toThreeDigits(gb)} GB`;
+        }
+
+        if (!selectedFile) {
+            return (
+                <Typography
+                    sx={{ fontSize: 24, textTransform: 'none' }}
+                    color="text.primary"
+                    align="center"
+                >
+                    Drag file here or click to select
+                </Typography>
+            );
+        } else {
+            return (
+                <Typography
+                    sx={{ fontSize: 24, textTransform: 'none' }}
+                    color="text.primary"
+                    align="center"
+                >
+                    {selectedFile.name}
+                    <br />
+                    {_getHumanReadableSize(selectedFile.size)}
+                </Typography>
+            );
+        }
+    }
+
     return (
         <CenteredCard>
-            <div className={styles.main}>
-                <button onClick={start}>Start</button>
-                <h2>{_connectionStatus()}</h2>
-                <input 
-                    type="file" 
-                    onChange={_fileChangeHandler}
-                    id="file-upload" 
-                />
-                <label htmlFor="file-upload">
-                    <Button onClick={_uploadHandler} disabled={!remoteConnected || !fileSelected}>
-                        Upload
-                    </Button>
-                </label>
+            <div className={[styles.main, styles.maxWH].join(' ')}>
                 {
-                    selectedFile &&
-                    <div>
-                        <p>Filename: {selectedFile.name}</p>
-                        <p>Filetype: {selectedFile.type}</p>
-                        <p>Size in bytes: {selectedFile.size}</p>
+                    !WSConnected &&
+                    <Button 
+                        onClick={start} 
+                        size={"large"}
+                    >
+                        Start
+                    </Button>
+                }
+                <h2>{_connectionStatus()}</h2>
+                <Dropzone
+                    onDrop={_fileChangeHandler}
+                    maxFiles={1}
+                >
+                    {
+                        ({getRootProps, getInputProps}) => (
+                            <section className={styles.droparea}>
+                                <div className={styles.maxWH} {...getRootProps()}>
+                                    <input {...getInputProps()} />
+                                    <Button
+                                        className={[styles.maxWH, styles.roundButton].join(' ')}
+                                    >
+                                        {_dropzoneText()}
+                                    </Button>
+                                </div>
+                            </section>
+                        )
+                    }
+                </Dropzone>
+                {
+                    WSConnected && 
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            padding: "1.5em"
+                        }}
+                    >
+                        <Button 
+                            onClick={_uploadHandler} 
+                            size={"large"}
+                            disabled={!remoteConnected || !fileSelected}
+                        >
+                            <FontAwesomeIcon icon={faPaperPlane} />
+                            <div style={{ padding: '3px' }} />
+                            Send
+                        </Button>
                     </div>
                 }
-                <br />
             </div>
         </CenteredCard>
     );
