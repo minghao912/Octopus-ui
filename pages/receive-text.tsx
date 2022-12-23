@@ -1,5 +1,9 @@
 import { useState, useEffect, ChangeEvent } from "react";
 
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+
 import { URL } from "../utils/urls";
 import styles from "../styles/temp.module.css";
 
@@ -26,12 +30,12 @@ export default function Send() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    function handleCodeInput(e: ChangeEvent<HTMLInputElement>) {
+    function _handleCodeInput(e: ChangeEvent<HTMLInputElement>) {
         setRemoteCode(e.target.value);
     }
 
     // Initializes Websocket
-    function connect() {
+    function _connect() {
         const newWS = new WebSocket(URL + "/receive");
 
         newWS.onopen = (event) => {
@@ -45,6 +49,9 @@ export default function Send() {
 
             if (msg.startsWith('FILE')) {
                 console.log("File data received");
+            } else if (msg.startsWith('ERROR')) {
+                console.error("Error from WS server\n" + msg);
+                setWSConnected(false);
             } else {
                 console.log("Message data received");
                 setNewestMessage(msg);
@@ -66,9 +73,26 @@ export default function Send() {
 
     return (
         <CenteredCard>
-            <div className={styles.main}>
-                <input onChange={handleCodeInput}></input>
-                <button onClick={connect}>Connect</button>
+            <div className={[styles.main, styles.maxWH].join(' ')}>
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        justifyContent: "left",
+                    }}
+                >
+                    <TextField 
+                        label="Your 6-digit code"
+                        onChange={_handleCodeInput}
+                    />
+                    <div style={{marginRight: "10px"}} />
+                    <Button 
+                        size={"large"}
+                        onClick={_connect}
+                    >
+                        Connect
+                    </Button>
+                </div>
                 <h2>
                     {
                         WSConnected
@@ -82,7 +106,14 @@ export default function Send() {
                 }
                 {
                     newestMessage && 
-                    <p>{newestMessage}</p>
+                    <Typography style={{
+                        wordWrap: "break-word",
+                        height: "65%",
+                        overflowY: "auto",
+                        whiteSpace: "pre-line"
+                    }}>
+                        {newestMessage}
+                    </Typography>
                 }
             </div>
         </CenteredCard>

@@ -1,5 +1,8 @@
 import { useState, useEffect, ChangeEvent } from "react";
 
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+
 import { URL } from "../utils/urls";
 import { removeCode } from "../utils/delete";
 import styles from "../styles/temp.module.css";
@@ -70,9 +73,11 @@ export default function Send() {
 
         newWS.onclose = (event) => {
             setWSConnected(false);
+            setRemoteCode("");
         }
 
         newWS.onerror = (event) => {
+            setWSConnected(false);
             console.error(event);
         }
 
@@ -102,10 +107,35 @@ export default function Send() {
     return (
         <CenteredCard>
             <div className={styles.main}>
-                <button onClick={start}>Start</button>
+                {
+                    !WSConnected &&
+                    <Button 
+                        onClick={start} 
+                        size={"large"}
+                    >
+                        Start
+                    </Button>
+                }
                 <h2>{_connectionStatus()}</h2>
-                <input onChange={handleInput} disabled={!remoteConnected}></input>
-                <button onClick={sendMessage} disabled={!remoteConnected}>Send</button>
+                <TextField
+                    multiline
+                    disabled={!remoteConnected}
+                    minRows={4}
+                    maxRows={13}
+                    onChange={handleInput}
+                    sx={{
+                        width: '100%',
+                        overflowY: 'auto',
+                        whiteSpace: 'pre-wrap'
+                    }}
+                />
+                <Button 
+                    onClick={sendMessage} 
+                    disabled={!remoteConnected}
+                    style={{float: 'right'}}
+                >
+                    Send
+                </Button>
             </div>
         </CenteredCard>
     );
