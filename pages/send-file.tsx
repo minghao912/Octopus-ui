@@ -7,9 +7,10 @@ import Typography from "@mui/material/Typography";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
-import { base64Encode } from "../utils/encoder";
+import { base64Encode } from "../utils/b64";
 import { URL } from "../utils/urls";
 import { removeCode } from "../utils/delete";
+import { getHumanReadableSize } from "../utils/nerdstuff";
 import styles from "../styles/temp.module.css";
 
 import CenteredCard from "../components/CenteredCard";
@@ -21,10 +22,16 @@ export default function Send(props: any) {
     const [WSConnected, setWSConnected] = useState<boolean>(false);
     const [remoteConnected, setRemoteConnected] = useState<boolean>(false);
     const [remoteCode, setRemoteCode] = useState<string>("");
+    const [alreadySent, setAlreadySent] = useState<boolean>(false);
 
     useEffect(() => {
+        window.addEventListener('beforeunload', (e) => {
+            e.preventDefault();
+            cleanup();
+        });
+
         // Cleanup on unmount
-        return function cleanup() {      
+        function cleanup() {      
             console.log("Running cleanup...");
 
             // Tell server to delete code from db
@@ -36,6 +43,8 @@ export default function Send(props: any) {
             ws.close();
             console.log("Closed original WS");
         }
+
+        return cleanup;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [remoteCode]);
 
@@ -46,6 +55,15 @@ export default function Send(props: any) {
 
     // Initializes Websocket
     function start() {
+        // Reset state
+        setSelectedFile(null);
+        setFileSelected(false);
+        setWS(null);
+        setWSConnected(false);
+        setRemoteConnected(false);
+        setRemoteCode("");
+        setAlreadySent(false);
+
         const newWS = new WebSocket(URL + "/send");
 
         newWS.onopen = (event) => {
@@ -84,11 +102,14 @@ export default function Send(props: any) {
         setWS(newWS);
     }
 
-    function _uploadHandler() {
+    async function _uploadHandler() {
         if (!ws)
             return;
         if (!selectedFile)
             return;
+
+        // Set already sent
+        setAlreadySent(true);
 
         // Send "handshake" message telling server that we are sending file
         // Also includes filename, filesize
@@ -96,30 +117,39 @@ export default function Send(props: any) {
         console.log("Sent file metadata");
 
         // Split file into chunks
-        let fileChunks = _splitChunks<File>(selectedFile, 1024 * 1 /* 1KB */);
+        let fileChunks = _splitChunks<File>(selectedFile, 1020 * 1 /* 1KB */);
         console.log("File split into chunks");
 
         // Turn chunks into base64 then send to remote
-        fileChunks.forEach(c => {
+        let firstChunk = true;
+        for (const c of fileChunks) {
             console.log("Processing new chunk");
 
-            base64Encode(c).then(b64c => {
-                let b64Str: string;
-                if (b64c instanceof ArrayBuffer) {
-                    b64Str = [...new Uint8Array(b64c)]
-                                .map(x => x.toString(16).padStart(2, '0'))
-                                .join('');
-                } else 
-                    b64Str = b64c;
+            let b64c = await base64Encode(c);
 
-                // Remove the metadata
+            let b64Str: string;
+            if (b64c instanceof ArrayBuffer) {
+                b64Str = [...new Uint8Array(b64c)]
+                            .map(x => x.toString(16).padStart(2, '0'))
+                            .join('');
+            } else 
+                b64Str = b64c;
+
+            // Remove the metadata
+            if (!firstChunk) {
                 let temp = b64Str.split(";base64,");
                 b64Str = (temp.length > 1) ? temp[1] : temp[0];
+            } else 
+                firstChunk = !firstChunk;
 
-                // Send to remote
-                ws.send(`${remoteCode!}: ${b64Str}`);
-            });
-        });
+            // Send to remote
+            ws.send(`${remoteCode!}: ${b64Str}`);
+        }
+
+        // Let remote know we're finished
+        setTimeout(() => {
+            ws.send(`${remoteCode}: END`);
+        }, 1000);
     }
 
     function _splitChunks<Q extends Blob>(blob: Q, chunkSize: number): Blob[] {
@@ -147,25 +177,10 @@ export default function Send(props: any) {
     }
 
     function _dropzoneText(): JSX.Element {
-        function _getHumanReadableSize(bytes: number): string {
-            function _toThreeDigits(num: number): number {
-                return Math.round((num + Number.EPSILON) * 10) / 10;
-            }
-
-            let kb, mb, gb;
-            if ((kb = bytes / 1000) < 1)
-                return `${_toThreeDigits(bytes)} B`;
-            else if ((mb = kb / 1000) < 1)
-                return `${_toThreeDigits(kb)} KB`;
-            else if ((gb = mb / 1000) < 1)
-                return `${_toThreeDigits(mb)} MB`;
-            else return `${_toThreeDigits(gb)} GB`;
-        }
-
         if (!selectedFile) {
             return (
                 <Typography
-                    sx={{ fontSize: 24, textTransform: 'none' }}
+                    sx={{ fontSize: 24, textTransform: 'none', wordWrap: 'break-word', maxWidth: '100%' }}
                     color="text.primary"
                     align="center"
                 >
@@ -175,13 +190,13 @@ export default function Send(props: any) {
         } else {
             return (
                 <Typography
-                    sx={{ fontSize: 24, textTransform: 'none' }}
+                    sx={{ fontSize: 24, textTransform: 'none', wordWrap: 'break-word', maxWidth: '100%' }}
                     color="text.primary"
                     align="center"
                 >
-                    {selectedFile.name}
+                    <p style={{wordWrap: 'break-word'}}>{selectedFile.name}</p>
                     <br />
-                    {_getHumanReadableSize(selectedFile.size)}
+                    <p style={{wordWrap: 'break-word'}}>{getHumanReadableSize(selectedFile.size)}</p>
                 </Typography>
             );
         }
@@ -203,6 +218,7 @@ export default function Send(props: any) {
                 <Dropzone
                     onDrop={_fileChangeHandler}
                     maxFiles={1}
+                    disabled={!WSConnected}
                 >
                     {
                         ({getRootProps, getInputProps}) => (
@@ -211,6 +227,7 @@ export default function Send(props: any) {
                                     <input {...getInputProps()} />
                                     <Button
                                         className={[styles.maxWH, styles.roundButton].join(' ')}
+                                        disabled={!WSConnected}
                                     >
                                         {_dropzoneText()}
                                     </Button>
@@ -231,7 +248,7 @@ export default function Send(props: any) {
                         <Button 
                             onClick={_uploadHandler} 
                             size={"large"}
-                            disabled={!remoteConnected || !fileSelected}
+                            disabled={!remoteConnected || !fileSelected || alreadySent}
                         >
                             <FontAwesomeIcon icon={faPaperPlane} />
                             <div style={{ padding: '3px' }} />
