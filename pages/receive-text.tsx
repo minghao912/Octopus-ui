@@ -9,7 +9,7 @@ import styles from "../styles/temp.module.css";
 
 import CenteredCard from "../components/CenteredCard";
 
-export default function Send() {
+export default function Receive() {
     // Websocket data
     const [ws, setWS] = useState<WebSocket | null>(null);
     const [WSConnected, setWSConnected] = useState<boolean>(false);
