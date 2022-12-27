@@ -21,8 +21,17 @@ export default function Send() {
     const [localMessage, setLocalMessage] = useState<string>("");
 
     useEffect(() => {
+        window.addEventListener('beforeunload', (e) => {
+            e.preventDefault();
+            cleanup();
+        });
+
+        window.addEventListener('unload', (e) => {
+            cleanup();
+        })
+
         // Cleanup on unmount
-        return function cleanup() {      
+        function cleanup() {      
             console.log("Running cleanup...");
 
             // Tell server to delete code from db
@@ -34,6 +43,8 @@ export default function Send() {
             ws.close();
             console.log("Closed original WS");
         }
+
+        return cleanup;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [remoteCode]);
 
@@ -43,6 +54,12 @@ export default function Send() {
 
     // Initializes Websocket
     function start() {
+        // Reset state
+        setWS(null);
+        setWSConnected(false);
+        setRemoteConnected(false);
+        setRemoteCode("");
+
         const newWS = new WebSocket(WS_URL + "/send");
 
         newWS.onopen = (event) => {

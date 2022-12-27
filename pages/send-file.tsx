@@ -30,6 +30,10 @@ export default function Send(props: any) {
             cleanup();
         });
 
+        window.addEventListener('unload', (e) => {
+            cleanup();
+        })
+
         // Cleanup on unmount
         function cleanup() {      
             console.log("Running cleanup...");
