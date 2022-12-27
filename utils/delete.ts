@@ -9,6 +9,7 @@ export function removeCode(remoteCode: string | null): void {
     console.log(`Sending delete signal for ${remoteCode}`);
 
     fetch(`${HTTP_URL}/remove?code=${remoteCode}`, {
-        method: "DELETE"
+        method: "DELETE",
+        keepalive: true
     });
 }
