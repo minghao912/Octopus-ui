@@ -184,7 +184,11 @@ export default function Send(props: any) {
                     color="text.primary"
                     align="center"
                 >
-                    Drag file here or click to select
+                    {
+                        WSConnected
+                            ? "Drag file here or click to select"
+                            : "Click the start button above"
+                    }
                 </Typography>
             );
         } else {

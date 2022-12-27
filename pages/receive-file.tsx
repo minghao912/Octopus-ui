@@ -1,8 +1,13 @@
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent, CSSProperties } from "react";
 
 import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
+import LinearProgress from "@mui/material/LinearProgress";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCircleNotch, faDownload } from '@fortawesome/free-solid-svg-icons';
 
 import { WS_URL } from "../utils/urls";
 import { getHumanReadableSize } from "../utils/nerdstuff";
@@ -175,6 +180,39 @@ export default function Receive(props: any) {
         tempLink.click();
     }
 
+    function _getProgressBarText(): string {
+        return `${getHumanReadableSize(totalReceivedBytes)} of ${getHumanReadableSize(fileMetadata!.filesize)} received`
+    }
+
+    function _getIcon(): JSX.Element {
+        const iconCSS = {
+            marginTop: "10px",
+            marginBottom: "10px",
+            color: "black"
+        } as CSSProperties
+
+        // Allow download if we have received all of the file (w/ 1% error just in case)
+        if (Math.abs(totalReceivedBytes - fileMetadata!.filesize) < (0.01 * fileMetadata!.filesize))
+            return (
+                <Button onClick={_startDownload}>
+                    <FontAwesomeIcon
+                        icon={faDownload}
+                        size={"6x"}
+                        style={iconCSS}
+                    />
+                </Button>
+            );
+        else
+            return (
+                <FontAwesomeIcon 
+                    icon={faCircleNotch} 
+                    className={"fa-spin"} 
+                    size={"6x"}
+                    style={iconCSS}
+                />
+            );
+    }
+
     function __debug() {
         console.log(fileData);
         console.log(fileData[fileData.length - 1]);
@@ -221,21 +259,26 @@ export default function Receive(props: any) {
                             maxHeight: "65%"
                         }}
                     >
-                    
-                        <Typography>
+                        {_getIcon()}
+                        <Typography align="center">
                             <b>{fileMetadata.filename}</b>
                         </Typography>
-                        <br />
-                        <Typography>
-                            {getHumanReadableSize(totalReceivedBytes)} of {getHumanReadableSize(fileMetadata.filesize)} received
+                        <Grid spacing={1} container style={{ marginTop: "10px", marginBottom: "10px" }}>
+                            <Grid xs item>
+                                <LinearProgress 
+                                    variant="determinate"
+                                    value={(totalReceivedBytes / fileMetadata.filesize) * 100}
+                                    style={{
+                                        borderRadius: "5px",
+                                        height: "10px",
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
+                        <Typography align="center">
+                            {_getProgressBarText()}
                         </Typography>
                     </div>
-                }
-                {
-                    fileBlobs.length > 0 &&
-                    <Button onClick={_startDownload}>
-                        Download
-                    </Button>
                 }
             </div>
         </CenteredCard>
