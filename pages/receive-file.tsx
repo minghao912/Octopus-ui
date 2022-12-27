@@ -63,6 +63,7 @@ export default function Receive(props: any) {
         setWSConnected(false);
         setFileMetadata(null);
         setFileData([] as string[]);
+        setFileBlobs([] as Blob[]);
         setTotalReceivedBytes(0);
 
         const newWS = new WebSocket(URL + "/receive");
@@ -123,24 +124,28 @@ export default function Receive(props: any) {
     }
 
     function _handleNewFileContents(str: string) {
-        // Find how many equal signs we have
-        let i = str.length - 1;
-        for (; i >= 0; i--) {
-            if (str.charAt(i) != '=')
-                break;
-        }
-
         // Find out how many bytes we received
-        let numBytes = i;
-        
+        let numBytes: number;
         if (str.startsWith("END"))
             numBytes = 0;
+        else {
+            // Check if this is the first message that contains the data:application/octet;base64,...
+            let commaIndex = str.indexOf(',');
+            if (commaIndex > -1)
+                numBytes = str.length - 1 - commaIndex;
+            else {
+                // Find how many equal signs we have
+                let i = str.length - 1;
+                for (; i >= 0; i--) {
+                    if (str.charAt(i) != '=')
+                        break;
+                }
+                numBytes = i + 1;
+            }
+        }
+        numBytes = Math.floor(3 * numBytes / 4);    // Base64 encodes 3 bytes to 4 characters
 
-        let commaIndex = str.indexOf(',');
-        if (commaIndex > -1)
-            numBytes = str.length - 1 - commaIndex;
-
-        setTotalReceivedBytes((oldBytes) => oldBytes + Math.floor(3 * numBytes / 4)); // Base64 encodes 3 bytes to 4 characters
+        setTotalReceivedBytes((oldBytes) => oldBytes + numBytes); 
         setFileData((oldData) => [...oldData, str]);
     }
 
