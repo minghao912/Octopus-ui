@@ -8,7 +8,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
 
 import { base64Encode } from "../utils/b64";
-import { URL } from "../utils/urls";
+import { WS_URL } from "../utils/urls";
 import { removeCode } from "../utils/delete";
 import { getHumanReadableSize } from "../utils/nerdstuff";
 import styles from "../styles/temp.module.css";
@@ -64,7 +64,7 @@ export default function Send(props: any) {
         setRemoteCode("");
         setAlreadySent(false);
 
-        const newWS = new WebSocket(URL + "/send");
+        const newWS = new WebSocket(WS_URL + "/send");
 
         newWS.onopen = (event) => {
             setWSConnected(true);

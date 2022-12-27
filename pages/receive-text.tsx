@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
-import { URL } from "../utils/urls";
+import { WS_URL } from "../utils/urls";
 import styles from "../styles/temp.module.css";
 
 import CenteredCard from "../components/CenteredCard";
@@ -36,7 +36,7 @@ export default function Receive() {
 
     // Initializes Websocket
     function _connect() {
-        const newWS = new WebSocket(URL + "/receive");
+        const newWS = new WebSocket(WS_URL + "/receive");
 
         newWS.onopen = (event) => {
             setWSConnected(true);
