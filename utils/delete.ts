@@ -1,4 +1,4 @@
-import { URL } from "./urls";
+import { HTTP_URL } from "./urls";
 
 export function removeCode(remoteCode: string | null): void {
     if (!remoteCode) {
@@ -7,14 +7,8 @@ export function removeCode(remoteCode: string | null): void {
     }
 
     console.log(`Sending delete signal for ${remoteCode}`);
-    const wsDelete = new WebSocket(URL + "/remove");
-    wsDelete.onopen = (event) => {
-        wsDelete.send(remoteCode);
-    }
-    wsDelete.onmessage = (event) => {
-        console.log(event.data as string);
-    }
-    wsDelete.onerror = (error) => {
-        console.log(error);
-    }
+
+    fetch(`${HTTP_URL}/remove?code=${remoteCode}`, {
+        method: "DELETE"
+    });
 }
