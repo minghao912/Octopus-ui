@@ -117,7 +117,7 @@ export default function Send(props: any) {
 
         // Send "handshake" message telling server that we are sending file
         // Also includes filename, filesize
-        ws.send(`${remoteCode!}: FILE,${selectedFile.name.replace(',', '-')},${selectedFile.size}`);
+        ws.send(`${remoteCode!}: FILE,${selectedFile.name.replaceAll(',', '-')},${selectedFile.size}`);
         console.log("Sent file metadata");
 
         // Split file into chunks
