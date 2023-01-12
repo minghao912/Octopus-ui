@@ -1,9 +1,9 @@
 const PRODUCTION = true;
 
 export const WS_URL = PRODUCTION  
-    ? "wss://octopus-server.dragonfruit.tk/server-ws"
+    ? "wss://octopus-server.chenminghao.co/server-ws"
     : "ws://localhost:8088";
 
 export const HTTP_URL = PRODUCTION
-    ? "https://octopus-server.dragonfruit.tk/server-http"
+    ? "https://octopus-server.chenminghao.co/server-http"
     : "https://localhost:8088";
