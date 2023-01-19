@@ -5,12 +5,12 @@ import Typography from '@mui/material/Typography';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPaperPlane, faArrowDownLong, faT, faFile } from '@fortawesome/free-solid-svg-icons';
 
-import { useState } from 'react';
-
-import styles from '../styles/home.module.css';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
+import styles from '../styles/home.module.css';
 import CenteredCard from '../components/CenteredCard';
+import useWindowDimensions, { MAX_MOBILE_WIDTH } from '../utils/useWindowDimensions';
 
 enum STEP {
     ONE, TWO
@@ -21,11 +21,25 @@ enum SR {
 }
 
 export default function Home() {
-    const [currentContent, setCurrentContent] = useState<JSX.Element>(_getContent(STEP.ONE, null));
+    const [_, width] = useWindowDimensions();
+
+    const [isMobile, setIsMobile] = useState<boolean>(false);
+    const [stepInfo, setStepInfo] = useState<[STEP, SR | null]>([STEP.ONE, null]);
+    const [currentContent, setCurrentContent] = useState<JSX.Element>(_getContent(...stepInfo));
+    
+    useEffect(() => {
+        if (width != null) {
+            setIsMobile(width < MAX_MOBILE_WIDTH);
+            setCurrentContent(_getContent(...stepInfo));
+        }
+    }, [width])
 
     function _userAction(e: React.MouseEvent<HTMLButtonElement, MouseEvent>, sr: SR) {
         // Make sure button click works on first click
         e.persist();
+
+        // Set state
+        setStepInfo([STEP.TWO, sr]);
 
         // Do fly away transition
         let f = document.querySelector('.fade-item');
@@ -38,6 +52,9 @@ export default function Home() {
     }
     
     function _getContent(step: STEP, sr: SR | null): JSX.Element {
+        const iconStyle = isMobile ? {height: '50px', color: 'black'} : {height: '75px', color: 'black'}
+        const fontSize = isMobile ? '24px' : '36px';
+
         if (step == STEP.ONE) {
             // Step one: Choose send or receive
             return (<Grid
@@ -63,14 +80,14 @@ export default function Home() {
                     <Grid
                         container
                         spacing={1}
-                        direction="row"
+                        direction={isMobile ? "column" : "row"}
                         justifyContent="space-around"
                         alignItems="center"
                         className={styles.maxWH}
                     >
                         <Grid item 
                             xs={5}
-                            className={styles.maxWH}
+                            className={isMobile ? styles.halfH : styles.maxWH}
                         >
                             <Button
                                 variant="outlined"
@@ -83,17 +100,17 @@ export default function Home() {
                                     direction="column"
                                     justifyContent="center"
                                     alignItems="center"
-                                    sx={{ margin: 5 }}
+                                    className={styles.maxWH}
                                 >
                                     <Grid item sx={{maxWidth: '100%'}}>
                                         <FontAwesomeIcon 
                                             icon={faPaperPlane} 
-                                            style={{height: '75px', color: 'black'}}
+                                            style={iconStyle}
                                         />
                                     </Grid>
                                     <Grid item sx={{maxWidth: '100%'}}>
                                         <Typography
-                                            sx={{ fontSize: 36 }}
+                                            sx={{ fontSize: fontSize }}
                                             color="text.primary"
                                             align="center"
                                         >
@@ -105,7 +122,7 @@ export default function Home() {
                         </Grid>
                         <Grid item 
                             xs={5}
-                            className={styles.maxWH}
+                            className={isMobile ? styles.halfH : styles.maxWH}
                         >
                             <Button
                                 variant="outlined"
@@ -118,17 +135,17 @@ export default function Home() {
                                     direction="column"
                                     justifyContent="center"
                                     alignItems="center"
-                                    sx={{margin: 5}}
+                                    className={styles.maxWH}
                                 >
                                     <Grid item sx={{maxWidth: '100%'}}>
                                         <FontAwesomeIcon 
                                             icon={faArrowDownLong}
-                                            style={{height: '75px', color: 'black'}}
+                                            style={iconStyle}
                                         />
                                     </Grid>
                                     <Grid item sx={{maxWidth: '100%'}}>
                                         <Typography
-                                            sx={{ fontSize: 36 }}
+                                            sx={{ fontSize: fontSize }}
                                             color="text.primary"
                                             align="center"
                                         >
@@ -169,14 +186,14 @@ export default function Home() {
                     <Grid
                         container
                         spacing={1}
-                        direction="row"
+                        direction={isMobile ? "column" : "row"}
                         justifyContent="space-around"
                         alignItems="center"
                         className={styles.maxWH}
                     >
                         <Grid item 
                             xs={5}
-                            className={styles.maxWH}
+                            className={isMobile ? styles.halfH : styles.maxWH}
                         >
                             <Link href={sr == SR.SEND ? "/send-text" : "/receive-text"} passHref={true}>
                                 <Button
@@ -194,12 +211,12 @@ export default function Home() {
                                         <Grid item sx={{maxWidth: '100%'}}>
                                             <FontAwesomeIcon 
                                                 icon={faT} 
-                                                style={{height: '75px', color: 'black'}}
+                                                style={iconStyle}
                                             />
                                         </Grid>
                                         <Grid item sx={{maxWidth: '100%'}}>
                                             <Typography
-                                                sx={{ fontSize: 36 }}
+                                                sx={{ fontSize: fontSize }}
                                                 color="text.primary"
                                                 align="center"
                                             >
@@ -230,12 +247,12 @@ export default function Home() {
                                         <Grid item sx={{maxWidth: '100%'}}>
                                             <FontAwesomeIcon 
                                                 icon={faFile}
-                                                style={{height: '75px', color: 'black'}}
+                                                style={iconStyle}
                                             />
                                         </Grid>
                                         <Grid item sx={{maxWidth: '100%'}}>
                                             <Typography
-                                                sx={{ fontSize: 36 }}
+                                                sx={{ fontSize: fontSize }}
                                                 color="text.primary"
                                                 align="center"
                                             >

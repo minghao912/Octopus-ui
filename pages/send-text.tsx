@@ -8,6 +8,7 @@ import { removeCode } from "../utils/delete";
 import styles from "../styles/temp.module.css";
 
 import CenteredCard from "../components/CenteredCard";
+import useWindowDimensions, { MAX_MOBILE_WIDTH } from "../utils/useWindowDimensions";
 
 export default function Send() {
     // Websocket data
@@ -19,6 +20,15 @@ export default function Send() {
 
     // Message data
     const [localMessage, setLocalMessage] = useState<string>("");
+
+    // For styling
+    const [_, width] = useWindowDimensions();
+    const [isMobile, setIsMobile] = useState<boolean>(false);
+
+    useEffect(() => {
+        if (width != null)
+            setIsMobile(width < MAX_MOBILE_WIDTH);
+    }, [width])
 
     useEffect(() => {
         window.addEventListener('beforeunload', (e) => {
@@ -137,7 +147,7 @@ export default function Send() {
                 <TextField
                     multiline
                     disabled={!remoteConnected}
-                    minRows={4}
+                    minRows={isMobile ? 10 : 4}
                     maxRows={13}
                     onChange={handleInput}
                     sx={{
