@@ -22,14 +22,15 @@ enum SR {
 
 export default function Home() {
     const [_, width] = useWindowDimensions();
+    const isMobile = (width! < MAX_MOBILE_WIDTH);
 
-    const [isMobile, setIsMobile] = useState<boolean>(false);
+    
     const [stepInfo, setStepInfo] = useState<[STEP, SR | null]>([STEP.ONE, null]);
     const [currentContent, setCurrentContent] = useState<JSX.Element>(_getContent(...stepInfo));
     
     useEffect(() => {
         if (width != null) {
-            setIsMobile(width < MAX_MOBILE_WIDTH);
+            // setIsMobile(width < MAX_MOBILE_WIDTH);
             setCurrentContent(_getContent(...stepInfo));
         }
     }, [width])
@@ -73,7 +74,7 @@ export default function Home() {
                         align="center"
                         gutterBottom
                     >
-                        I want to
+                        I want to {width} {isMobile ? "true" : "false"}
                     </Typography>
                 </Grid>
                 <Grid item sx={{ height: '80%' }}>

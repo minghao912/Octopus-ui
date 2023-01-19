@@ -23,11 +23,12 @@ export default function Send() {
 
     // For styling
     const [_, width] = useWindowDimensions();
-    const [isMobile, setIsMobile] = useState<boolean>(false);
+    const isMobile = (width! < MAX_MOBILE_WIDTH);
 
     useEffect(() => {
-        if (width != null)
-            setIsMobile(width < MAX_MOBILE_WIDTH);
+        if (width != null) {
+            // setIsMobile(width < MAX_MOBILE_WIDTH);
+        }
     }, [width])
 
     useEffect(() => {
