@@ -61,6 +61,11 @@ export default function Receive(props: any) {
         setRemoteCode(e.target.value);
     }
 
+    function _handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+        if (e.key === "Enter")
+            _connect();
+    }
+
     // Initializes Websocket
     function _connect() {
         // Reset state
@@ -232,6 +237,7 @@ export default function Receive(props: any) {
                     <TextField 
                         label="Your 6-digit code"
                         onChange={_handleCodeInput}
+                        onKeyDown={_handleKeyDown}
                     />
                     <div style={{marginRight: "10px"}} />
                     <Button 
@@ -260,7 +266,7 @@ export default function Receive(props: any) {
                         }}
                     >
                         {_getIcon()}
-                        <Typography align="center">
+                        <Typography align="center" style={{wordWrap: 'break-word'}}>
                             <b>{fileMetadata.filename}</b>
                         </Typography>
                         <Grid spacing={1} container style={{ marginTop: "10px", marginBottom: "10px" }}>

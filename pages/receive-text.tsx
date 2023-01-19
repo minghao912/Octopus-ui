@@ -34,6 +34,11 @@ export default function Receive() {
         setRemoteCode(e.target.value);
     }
 
+    function _handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+        if (e.key === "Enter")
+            _connect();
+    }
+
     // Initializes Websocket
     function _connect() {
         const newWS = new WebSocket(WS_URL + "/receive");
@@ -84,6 +89,7 @@ export default function Receive() {
                     <TextField 
                         label="Your 6-digit code"
                         onChange={_handleCodeInput}
+                        onKeyDown={_handleKeyDown}
                     />
                     <div style={{marginRight: "10px"}} />
                     <Button 
