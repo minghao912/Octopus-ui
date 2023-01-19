@@ -74,7 +74,7 @@ export default function Home() {
                         align="center"
                         gutterBottom
                     >
-                        I want to {width} {isMobile ? "true" : "false"}
+                        I want to
                     </Typography>
                 </Grid>
                 <Grid item sx={{ height: '80%' }}>
