@@ -148,7 +148,7 @@ export default function Send() {
                 <TextField
                     multiline
                     disabled={!remoteConnected}
-                    minRows={isMobile ? 10 : 4}
+                    minRows={isMobile ? 8 : 4}
                     maxRows={13}
                     onChange={handleInput}
                     sx={{
