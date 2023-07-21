@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Dropzone from "react-dropzone";
+import Dropzone, { DropzoneState } from "react-dropzone";
 
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
@@ -23,7 +23,6 @@ export default function Send(props: any) {
     const [remoteConnected, setRemoteConnected] = useState<boolean>(false);
     const [remoteCode, setRemoteCode] = useState<string>("");
     const [alreadySent, setAlreadySent] = useState<boolean>(false);
-    const [errorOccurred, setErrorOccurred] = useState<string | undefined>(undefined);
 
     useEffect(() => {
         window.addEventListener('beforeunload', (e) => {
@@ -228,10 +227,10 @@ export default function Send(props: any) {
                     disabled={!WSConnected}
                 >
                     {
-                        ({getRootProps, getInputProps}) => (
+                        ({getRootProps, getInputProps}: DropzoneState) => (
                             <section className={styles.droparea}>
                                 <div className={styles.maxWH} {...getRootProps()}>
-                                    <input {...getInputProps()} />
+                                    <input {...getInputProps()} type="file" />
                                     <Button
                                         className={[styles.maxWH, styles.roundButton].join(' ')}
                                         disabled={!WSConnected}
