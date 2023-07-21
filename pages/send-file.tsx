@@ -23,6 +23,7 @@ export default function Send(props: any) {
     const [remoteConnected, setRemoteConnected] = useState<boolean>(false);
     const [remoteCode, setRemoteCode] = useState<string>("");
     const [alreadySent, setAlreadySent] = useState<boolean>(false);
+    const [errorOccurred, setErrorOccurred] = useState<string | undefined>(undefined);
 
     useEffect(() => {
         window.addEventListener('beforeunload', (e) => {
@@ -115,45 +116,42 @@ export default function Send(props: any) {
         // Set already sent
         setAlreadySent(true);
 
-        // Send "handshake" message telling server that we are sending file
-        // Also includes filename, filesize
-        ws.send(`${remoteCode!}: FILE,${selectedFile.name.replaceAll(',', '-')},${selectedFile.size}`);
-        console.log("Sent file metadata");
-
         // Split file into chunks
-        let fileChunks = _splitChunks<File>(selectedFile, 1020 * 1 /* 1KB */);
+        let fileChunks = _splitChunks<File>(selectedFile, 1024 * 1 /* 1KB */);
         console.log("File split into chunks");
 
-        // Turn chunks into base64 then send to remote
-        let firstChunk = true;
-        for (const c of fileChunks) {
+        // Send "handshake" message telling server that we are sending file
+        // Also includes filename, filesize, chunk count
+        ws.send(`${remoteCode!}: FILE,${selectedFile.name.replaceAll(',', '-')},${selectedFile.size},${fileChunks.length}`);
+        console.log("Sent file metadata");
+
+        // Add metadata to chunks then send to remote
+        for (const [i, c] of fileChunks.entries()) {
             console.log("Processing new chunk");
 
-            let b64c = await base64Encode(c);
+            // Get binary data from blob (1024 B)
+            const unblobified = await c.arrayBuffer();
+            const fileBinaryData = new Uint8Array(unblobified);
 
-            let b64Str: string;
-            if (b64c instanceof ArrayBuffer) {
-                b64Str = [...new Uint8Array(b64c)]
-                            .map(x => x.toString(16).padStart(2, '0'))
-                            .join('');
-            } else 
-                b64Str = b64c;
+            // Create metadata
+            let segmentNumber = new Int32Array(1);
+            segmentNumber[0] = i;
 
-            // Remove the metadata
-            if (!firstChunk) {
-                let temp = b64Str.split(";base64,");
-                b64Str = (temp.length > 1) ? temp[1] : temp[0];
-            } else 
-                firstChunk = !firstChunk;
+            let segmentSize = new Int16Array(1);
+            segmentSize[0] = fileBinaryData.byteLength;
 
+            // Combine into one ArrayBuffer
+            let finalBinaryData = new Uint8Array(segmentNumber.byteLength + segmentSize.byteLength + fileBinaryData.byteLength);
+            const dv = new DataView(finalBinaryData.buffer);
+
+            dv.setUint32(0, segmentNumber[0], true);
+            dv.setUint16(4, segmentSize[0], true);
+            finalBinaryData.set(fileBinaryData, (segmentNumber.byteLength + segmentSize.byteLength));
+            
             // Send to remote
-            ws.send(`${remoteCode!}: ${b64Str}`);
+            const finalData = base64Encode(finalBinaryData);
+            ws.send(`${remoteCode!}: ${finalData}`);
         }
-
-        // Let remote know we're finished
-        setTimeout(() => {
-            ws.send(`${remoteCode}: END`);
-        }, 1000);
     }
 
     function _splitChunks<Q extends Blob>(blob: Q, chunkSize: number): Blob[] {
@@ -198,6 +196,7 @@ export default function Send(props: any) {
         } else {
             return (
                 <Typography
+                    component={"span"}
                     sx={{ fontSize: 24, textTransform: 'none', wordWrap: 'break-word', maxWidth: '100%' }}
                     color="text.primary"
                     align="center"

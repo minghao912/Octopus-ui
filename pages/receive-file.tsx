@@ -1,8 +1,10 @@
 import { useState, useEffect, ChangeEvent, CSSProperties } from "react";
 
+import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import LinearProgress from "@mui/material/LinearProgress";
+import Snackbar from "@mui/material/Snackbar";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
@@ -19,9 +21,12 @@ import CenteredCard from "../components/CenteredCard";
 interface FileMetadata {
     filename: string,
     filesize: number,
+    chunks: number,
 }
 
 export default function Receive(props: any) {
+    const [errorOccurred, setErrorOccurred] = useState<string | undefined>(undefined);
+
     // Websocket data
     const [ws, setWS] = useState<WebSocket | null>(null);
     const [WSConnected, setWSConnected] = useState<boolean>(false);
@@ -29,9 +34,10 @@ export default function Receive(props: any) {
 
     // File data
     const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
-    const [fileData, setFileData] = useState<string[]>([] as string[]);
+    const [fileData, setFileData] = useState<Uint8Array[]>([] as Uint8Array[]);
+    const [totalReceivedSegments, setTotalReceivedSegments] = useState<number>(0);
     const [totalReceivedBytes, setTotalReceivedBytes] = useState<number>(0);
-    const [fileBlobs, setFileBlobs] = useState<Blob[]>([] as Blob[]);
+    const [fileBlob, setFileBlob] = useState<Blob | undefined>();
 
     useEffect(() => {
         // Automatically close the websocket on unmount
@@ -45,17 +51,9 @@ export default function Receive(props: any) {
     }, []);
 
     useEffect(() => {
-        if (!fileData)
-            return;
-
-        let lastMessage = fileData[fileData.length - 1];
-        if (!lastMessage)
-            return;
-
-        // If we just got the END signal, start decode of file
-        if (lastMessage.startsWith("END"))
-            _decodeFile(fileData.slice(0, fileData.length - 1));
-    }, [fileData]);
+        if (fileMetadata && totalReceivedSegments >= fileMetadata.chunks)
+            _decodeFile(fileData);
+    }, [totalReceivedSegments]);
 
     function _handleCodeInput(e: ChangeEvent<HTMLInputElement>) {
         setRemoteCode(e.target.value);
@@ -72,8 +70,8 @@ export default function Receive(props: any) {
         setWS(null);
         setWSConnected(false);
         setFileMetadata(null);
-        setFileData([] as string[]);
-        setFileBlobs([] as Blob[]);
+        setFileData([] as Uint8Array[]);
+        setFileBlob(undefined);
         setTotalReceivedBytes(0);
 
         const newWS = new WebSocket(WS_URL + "/receive");
@@ -91,7 +89,7 @@ export default function Receive(props: any) {
                 console.log("File data received");
 
                 // Reset previous file(s)
-                setFileData([] as string[]);
+                setFileData([] as Uint8Array[]);
                 setFileMetadata(null);
                 setTotalReceivedBytes(0);
 
@@ -99,6 +97,7 @@ export default function Receive(props: any) {
                 _handleNewFileMetadata(msg);
             } else if (msg.startsWith('ERROR')) {
                 console.error("Error from WS server\n" + msg);
+                setErrorOccurred(`${msg.split(": ")[1]}`);
                 setWSConnected(false);
             } else if (msg.startsWith('OK')) {
                 console.log(msg);
@@ -126,59 +125,56 @@ export default function Receive(props: any) {
         let parts = str.split(',');
         let filename = parts[1];
         let filesize = parseInt(parts[2]);
+        let chunks = parseInt(parts[3]);
 
-        setFileMetadata({
-            filename: filename,
-            filesize: filesize
+        setFileMetadata({ filename, filesize, chunks });
+        setFileData([...Array(Math.ceil(filesize / 1024))]);
+    }
+
+    function _handleNewFileContents(b64: string) {
+        const contents = base64Decode(b64);
+
+        const segmentNumber = new Int32Array(contents.buffer.slice(0, 4))[0];
+        const segmentSize = new Int16Array(contents.buffer.slice(4, 4 + 2))[0];
+        const data = contents.slice(4 + 2);
+
+        console.log(segmentNumber, segmentSize, data);
+
+        setTotalReceivedBytes((oldBytes) => oldBytes + segmentSize); 
+        setTotalReceivedSegments((oldSegments) => oldSegments + 1);
+
+        setFileData((oldData) => {
+            let newData = [...oldData];
+            newData[segmentNumber] = data;
+
+            return newData;
         });
     }
 
-    function _handleNewFileContents(str: string) {
-        // Find out how many bytes we received
-        let numBytes: number;
-        if (str.startsWith("END"))
-            numBytes = 0;
-        else {
-            // Check if this is the first message that contains the data:application/octet;base64,...
-            let commaIndex = str.indexOf(',');
-            if (commaIndex > -1)
-                numBytes = str.length - 1 - commaIndex;
-            else {
-                // Find how many equal signs we have
-                let i = str.length - 1;
-                for (; i >= 0; i--) {
-                    if (str.charAt(i) != '=')
-                        break;
-                }
-                numBytes = i + 1;
-            }
-        }
-        numBytes = Math.floor(3 * numBytes / 4);    // Base64 encodes 3 bytes to 4 characters
-
-        setTotalReceivedBytes((oldBytes) => oldBytes + numBytes); 
-        setFileData((oldData) => [...oldData, str]);
-    }
-
-    function _decodeFile(fd: string[]) {
+    function _decodeFile(fd: Uint8Array[]) {
         console.log("Decoding file...");
-        base64Decode(fd.join(''))
-            .then((bb) => {
-                setFileBlobs((oldBlobs) => [...oldBlobs, bb])
-            });
+        setFileBlob(new Blob(fd));
     }
 
     function _startDownload() {
-        if (!fileBlobs) {
-            console.error("File blobs not available!");
-            return;
+        if (!fileBlob) {
+            console.error("File blobs not available, trying again");
+            try {
+                _decodeFile(fileData);
+            } catch (err) {
+                console.error("File blobs still not available!");
+                setErrorOccurred("File blobs not available");
+                return;
+            }
         }
 
         if (!fileMetadata) {
             console.error("File metadata not available");
+            setErrorOccurred("File metadata not available");
             return;
         }
 
-        let tempURL = window.URL.createObjectURL(fileBlobs[0]);
+        let tempURL = window.URL.createObjectURL(fileBlob!);
         let tempLink = document.createElement("a");
         tempLink.href = tempURL;
         tempLink.setAttribute("download", fileMetadata!.filename);
@@ -224,7 +220,15 @@ export default function Receive(props: any) {
         console.log(totalReceivedBytes);
     }
 
-    return (
+    return (<>
+        <Snackbar
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            open={errorOccurred != undefined}
+            onClose={() => setErrorOccurred(undefined)}
+            autoHideDuration={5000}
+        >
+            <Alert severity="error" onClose={() => setErrorOccurred(undefined)}>{errorOccurred}</Alert>
+        </Snackbar>
         <CenteredCard>
             <div className={[styles.main, styles.maxWH].join(' ')}>
                 <div
@@ -288,5 +292,5 @@ export default function Receive(props: any) {
                 }
             </div>
         </CenteredCard>
-    );
+    </>);
 }
