@@ -16,8 +16,7 @@ export default function CenteredCard(props: any): JSX.Element {
             alignItems="center"
             justifyContent="center"
             style={{
-                minHeight: 'calc(480px * 1.4)', 
-                height: '100vh',
+                height: '100%',
                 minWidth: 'calc(365px * 1.3)', 
                 paddingLeft: '15%', 
                 paddingRight: '15%' 
@@ -27,8 +26,6 @@ export default function CenteredCard(props: any): JSX.Element {
                 <Card
                     sx={{ 
                         borderRadius: '16px',
-                        minHeight: '480px',
-                        minWidth: '365px'
                     }}
                     className={styles.card}
                 >
@@ -47,8 +44,7 @@ export default function CenteredCard(props: any): JSX.Element {
             alignItems="center"
             justifyContent="center"
             style={{
-                minHeight: 'calc(480px * 1.4)', 
-                height: '100vh',
+                height: '100%',
                 minWidth: 'calc(640px * 1.3)', 
                 paddingLeft: '15%', 
                 paddingRight: '15%' 
@@ -58,12 +54,10 @@ export default function CenteredCard(props: any): JSX.Element {
                 <Card
                     sx={{ 
                         borderRadius: '16px',
-                        minHeight: '480px',
-                        minWidth: '640px'
                     }}
                     className={styles.card}
                 >
-                    <CardContent className={[styles.maxWH, styles.cardContent].join(' ')}>
+                    <CardContent className={styles.cardContent}>
                         {props.children}
                     </CardContent>
                 </Card>

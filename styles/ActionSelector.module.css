@@ -1,6 +1,6 @@
 .card {
     align-items: center;
-    height: 60vh;
+    height: 60%;
     background-color: rgba(255, 255, 255, 0.6);
 }
 
@@ -24,6 +24,13 @@
 }
 
 .roundButton {
+    height: 300px;
+    border-radius: 16px;
+    padding: 1em;
+}
+
+.roundButtonMobile {
+    height: 100px;
     border-radius: 16px;
     padding: 1em;
 }

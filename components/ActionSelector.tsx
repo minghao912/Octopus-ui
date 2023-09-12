@@ -68,8 +68,14 @@ export default function ActionSelector() {
                 >
                     <Button
                         variant="outlined"
-                        className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
                         onClick={(e) => _userAction(e, SR.SEND)}
+                        className={
+                            [
+                                styles.raise, 
+                                styles.maxWH, 
+                                (isMobile ? styles.roundButtonMobile : styles.roundButton)
+                            ].join(" ")
+                        }
                     >
                         <Grid
                             container
@@ -103,8 +109,14 @@ export default function ActionSelector() {
                 >
                     <Button
                         variant="outlined"
-                        className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
                         onClick={(e) => _userAction(e, SR.RECEIVE)}
+                        className={
+                            [
+                                styles.raise, 
+                                styles.maxWH, 
+                                (isMobile ? styles.roundButtonMobile : styles.roundButton)
+                            ].join(" ")
+                        }
                     >
                         <Grid
                             container
@@ -154,7 +166,13 @@ export default function ActionSelector() {
                         <Link href={sr == SR.SEND ? "/send-text" : "/receive-text"} passHref={true}>
                             <Button
                                 variant="outlined"
-                                className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
+                                className={
+                                    [
+                                        styles.raise, 
+                                        styles.maxWH, 
+                                        (isMobile ? styles.roundButtonMobile : styles.roundButton)
+                                    ].join(" ")
+                                }
                             >                                
                                 <Grid
                                     container
@@ -190,7 +208,13 @@ export default function ActionSelector() {
                         <Link href={sr == SR.SEND ? "/send-file" : "/receive-file"} passHref={true}>
                             <Button
                                 variant="outlined"
-                                className={[styles.raise, styles.maxWH, styles.roundButton].join(" ")}
+                                className={
+                                    [
+                                        styles.raise, 
+                                        styles.maxWH, 
+                                        (isMobile ? styles.roundButtonMobile : styles.roundButton)
+                                    ].join(" ")
+                                }
                             >
                                 <Grid
                                     container
@@ -228,14 +252,14 @@ export default function ActionSelector() {
         <CenteredCard>
             <Grid
                 container
-                spacing={2}
+                spacing={1}
                 direction="column"
                 justifyContent="center"
                 alignItems="space-around"
                 sx={{ margin: 0 }}
                 className={styles.maxWH}
             >
-                <Grid
+                <Grid item
                     sx={{ height: '20%' }}
                 >
                     <Stepper alternativeLabel activeStep={stepInfo[0]} connector={<CustomStepConnector />}>
@@ -247,16 +271,18 @@ export default function ActionSelector() {
                         </Step>
                     </Stepper>
                 </Grid>
-                <Grid
-                    container
-                    spacing={1}
-                    direction={isMobile ? "column" : "row"}
-                    justifyContent="space-around"
-                    alignItems="center"
-                    className="fade-item"
-                    sx={{ height: '80%', paddingTop: '5%' }}
-                >
-                    {currentButtons}
+                <Grid item>
+                    <Grid
+                        container
+                        spacing={1}
+                        direction={isMobile ? "column" : "row"}
+                        justifyContent="space-around"
+                        alignItems="center"
+                        className="fade-item"
+                        sx={{ height: '80%', paddingTop: '5%' }}
+                    >
+                        {currentButtons}
+                    </Grid>
                 </Grid>
             </Grid>
         </CenteredCard>
