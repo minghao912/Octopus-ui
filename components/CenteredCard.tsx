@@ -18,7 +18,7 @@ export default function CenteredCard(props: any): JSX.Element {
             style={{
                 minHeight: 'calc(480px * 1.4)', 
                 height: '100vh',
-                minWidth: 'calc(300px * 1.3)', 
+                minWidth: 'calc(365px * 1.3)', 
                 paddingLeft: '15%', 
                 paddingRight: '15%' 
             }}
@@ -28,13 +28,11 @@ export default function CenteredCard(props: any): JSX.Element {
                     sx={{ 
                         borderRadius: '16px',
                         minHeight: '480px',
-                        minWidth: '300px'
+                        minWidth: '365px'
                     }}
                     className={styles.card}
                 >
-                    <CardContent
-                        className={styles.maxWH}
-                    >
+                    <CardContent className={[styles.maxWH, styles.cardContent].join(' ')}>
                         {props.children}
                     </CardContent>
                 </Card>
@@ -65,9 +63,7 @@ export default function CenteredCard(props: any): JSX.Element {
                     }}
                     className={styles.card}
                 >
-                    <CardContent
-                        className={styles.maxWH}
-                    >
+                    <CardContent className={[styles.maxWH, styles.cardContent].join(' ')}>
                         {props.children}
                     </CardContent>
                 </Card>
