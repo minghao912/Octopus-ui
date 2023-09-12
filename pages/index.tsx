@@ -9,7 +9,7 @@ export default function Home() {
     const TYPING_TIME_DELAY_MS = 2000;
 
     return (
-        <Grid container spacing={2} sx={{ height: '100vh', overflow: 'hidden' }}>
+        <Grid container spacing={2} sx={{ height: '100vh' }}>
             <Grid item xs={12} sx={{ paddingTop: '3% !important' }}>
                 <div style={{ textAlign: 'center' }}>
                     <Typography style={{ fontSize: 72 }}><b>Octopus</b></Typography>

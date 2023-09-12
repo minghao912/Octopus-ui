@@ -17,7 +17,6 @@ export default function CenteredCard(props: any): JSX.Element {
             justifyContent="center"
             style={{
                 height: '100%',
-                minWidth: 'calc(365px * 1.3)', 
                 paddingLeft: '15%', 
                 paddingRight: '15%' 
             }}

@@ -279,7 +279,7 @@ export default function ActionSelector() {
                         justifyContent="space-around"
                         alignItems="center"
                         className="fade-item"
-                        sx={{ height: '80%', paddingTop: '5%' }}
+                        sx={{ height: '80%' }}
                     >
                         {currentButtons}
                     </Grid>
