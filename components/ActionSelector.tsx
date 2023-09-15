@@ -274,12 +274,12 @@ export default function ActionSelector() {
                 <Grid item>
                     <Grid
                         container
-                        spacing={1}
+                        spacing={1.5}
                         direction={isMobile ? "column" : "row"}
                         justifyContent="space-around"
                         alignItems="center"
                         className="fade-item"
-                        sx={{ height: '80%' }}
+                        sx={{ height: '80%', paddingTop: '20px' }}
                     >
                         {currentButtons}
                     </Grid>
