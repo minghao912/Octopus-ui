@@ -1,13 +1,10 @@
 import { useState, useEffect, ChangeEvent } from "react";
 
-import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 
 import { WS_URL } from "../utils/urls";
-import styles from "../styles/temp.module.css";
-
-import CenteredCard from "../components/CenteredCard";
+import useWindowDimensions, { MAX_MOBILE_WIDTH } from "../utils/useWindowDimensions";
+import Receiver from "../components/Receiver";
 
 export default function Receive() {
     // Websocket data
@@ -18,6 +15,10 @@ export default function Receive() {
 
     // Message data
     const [newestMessage, setNewestMessage] = useState<string>("");
+
+    // For styling
+    const [_, width] = useWindowDimensions();
+    const isMobile = (width! < MAX_MOBILE_WIDTH);
 
     useEffect(() => {
         // Automatically close the websocket on unmount
@@ -77,51 +78,34 @@ export default function Receive() {
     }
 
     return (
-        <CenteredCard>
-            <div className={[styles.main, styles.maxWH].join(' ')}>
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "row",
-                        justifyContent: "left",
+        <Receiver
+            startConnection={_connect}
+            input={{
+                handleCodeInput: _handleCodeInput,
+                handleKeyDown: _handleKeyDown
+            }}
+            state={{ wsConnected: WSConnected }}
+        >
+            {
+                WSConnected &&
+                <h2>Incoming Message</h2>
+            }
+            {
+                newestMessage && 
+                <TextField
+                    multiline
+                    variant={"outlined"}
+                    minRows={isMobile ? 8 : 4}
+                    maxRows={13}
+                    sx={{
+                        width: '100%',
+                        overflowY: 'auto',
+                        whiteSpace: 'pre-wrap'
                     }}
-                >
-                    <TextField 
-                        label="Your 6-digit code"
-                        onChange={_handleCodeInput}
-                        onKeyDown={_handleKeyDown}
-                    />
-                    <div style={{marginRight: "10px"}} />
-                    <Button 
-                        size={"large"}
-                        onClick={_connect}
-                    >
-                        Connect
-                    </Button>
-                </div>
-                <h2>
-                    {
-                        WSConnected
-                            ? <span style={{color: "green"}}>Connected</span> 
-                            : <span style={{color: "red"}}>Disconnected</span>
-                    }
-                </h2>
-                {
-                    WSConnected &&
-                    <h2>Incoming Message</h2>
-                }
-                {
-                    newestMessage && 
-                    <Typography style={{
-                        wordWrap: "break-word",
-                        height: "65%",
-                        overflowY: "auto",
-                        whiteSpace: "pre-line"
-                    }}>
-                        {newestMessage}
-                    </Typography>
-                }
-            </div>
-        </CenteredCard>
+                    InputProps={{ readOnly: true }}
+                    value={newestMessage}
+                />
+            }
+        </Receiver>
     );
 }

@@ -1,11 +1,8 @@
 import { useState, useEffect, ChangeEvent, CSSProperties } from "react";
 
-import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Grid from "@mui/material/Grid";
 import LinearProgress from "@mui/material/LinearProgress";
-import Snackbar from "@mui/material/Snackbar";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -14,9 +11,7 @@ import { faCircleNotch, faDownload } from '@fortawesome/free-solid-svg-icons';
 import { WS_URL } from "../utils/urls";
 import { getHumanReadableSize } from "../utils/nerdstuff";
 import { base64Decode } from "../utils/b64";
-import styles from "../styles/temp.module.css";
-
-import CenteredCard from "../components/CenteredCard";
+import Receiver from "../components/Receiver";
 
 interface FileMetadata {
     filename: string,
@@ -220,77 +215,51 @@ export default function Receive(props: any) {
         console.log(totalReceivedBytes);
     }
 
-    return (<>
-        <Snackbar
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            open={errorOccurred != undefined}
-            onClose={() => setErrorOccurred(undefined)}
-            autoHideDuration={5000}
+    return (
+        <Receiver
+            startConnection={_connect}
+            error={{
+                errorOccurred,
+                setErrorOccurred
+            }}
+            input={{
+                handleCodeInput: _handleCodeInput,
+                handleKeyDown: _handleKeyDown
+            }}
+            state={{ wsConnected: WSConnected }}
         >
-            <Alert severity="error" onClose={() => setErrorOccurred(undefined)}>{errorOccurred}</Alert>
-        </Snackbar>
-        <CenteredCard>
-            <div className={[styles.main, styles.maxWH].join(' ')}>
+            { 
+                fileMetadata &&
                 <div
                     style={{
                         display: "flex",
-                        flexDirection: "row",
-                        justifyContent: "left",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        padding: "1.5em",
+                        maxHeight: "65%"
                     }}
                 >
-                    <TextField 
-                        label="Your 6-digit code"
-                        onChange={_handleCodeInput}
-                        onKeyDown={_handleKeyDown}
-                    />
-                    <div style={{marginRight: "10px"}} />
-                    <Button 
-                        size={"large"}
-                        onClick={_connect}
-                    >
-                        Connect
-                    </Button>
-                </div>
-                <h2>
-                    {
-                        WSConnected
-                            ? <span style={{color: "green"}}>Connected</span> 
-                            : <span style={{color: "red"}}>Disconnected</span>
-                    }
-                </h2>
-                { 
-                    fileMetadata &&
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center",
-                            padding: "1.5em",
-                            maxHeight: "65%"
-                        }}
-                    >
-                        {_getIcon()}
-                        <Typography align="center" style={{wordWrap: 'break-word'}}>
-                            <b>{fileMetadata.filename}</b>
-                        </Typography>
-                        <Grid spacing={1} container style={{ marginTop: "10px", marginBottom: "10px" }}>
-                            <Grid xs item>
-                                <LinearProgress 
-                                    variant="determinate"
-                                    value={(totalReceivedBytes / fileMetadata.filesize) * 100}
-                                    style={{
-                                        borderRadius: "5px",
-                                        height: "10px",
-                                    }}
-                                />
-                            </Grid>
+                    {_getIcon()}
+                    <Typography align="center" style={{wordWrap: 'break-word'}}>
+                        <b>{fileMetadata.filename}</b>
+                    </Typography>
+                    <Grid spacing={1} container style={{ marginTop: "10px", marginBottom: "10px" }}>
+                        <Grid xs item>
+                            <LinearProgress 
+                                variant="determinate"
+                                value={(totalReceivedBytes / fileMetadata.filesize) * 100}
+                                style={{
+                                    borderRadius: "5px",
+                                    height: "10px",
+                                }}
+                            />
                         </Grid>
-                        <Typography align="center">
-                            {_getProgressBarText()}
-                        </Typography>
-                    </div>
-                }
-            </div>
-        </CenteredCard>
-    </>);
+                    </Grid>
+                    <Typography align="center">
+                        {_getProgressBarText()}
+                    </Typography>
+                </div>
+            }
+        </Receiver>
+    );
 }

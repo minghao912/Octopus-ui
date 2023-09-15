@@ -4,16 +4,12 @@ import Dropzone, { DropzoneState } from "react-dropzone";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPaperPlane } from '@fortawesome/free-solid-svg-icons';
-
 import { base64Encode } from "../utils/b64";
 import { WS_URL } from "../utils/urls";
 import { removeCode } from "../utils/delete";
 import { getHumanReadableSize } from "../utils/nerdstuff";
-import styles from "../styles/temp.module.css";
-
-import CenteredCard from "../components/CenteredCard";
+import Sender from "../components/Sender";
+import styles from "../styles/SendFile.module.css";
 
 export default function Send(props: any) {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -35,12 +31,12 @@ export default function Send(props: any) {
         })
 
         // Cleanup on unmount
-        function cleanup() {      
+        function cleanup() {
             console.log("Running cleanup...");
 
             // Tell server to delete code from db
             removeCode(remoteCode);
-            
+
             // Close the original websocket
             if (!ws) return;
             ws.onopen = ws.onmessage = ws.onclose = ws.onerror = null;
@@ -58,7 +54,7 @@ export default function Send(props: any) {
     }
 
     // Initializes Websocket
-    function start() {
+    function _startWS() {
         // Reset state
         setSelectedFile(null);
         setFileSelected(false);
@@ -89,7 +85,7 @@ export default function Send(props: any) {
                 setRemoteConnected(true);
             }
             // Just the OKs
-            else {    
+            else {
                 console.log(msg);
             }
         }
@@ -146,7 +142,7 @@ export default function Send(props: any) {
             dv.setUint32(0, segmentNumber[0], true);
             dv.setUint16(4, segmentSize[0], true);
             finalBinaryData.set(fileBinaryData, (segmentNumber.byteLength + segmentSize.byteLength));
-            
+
             // Send to remote
             const finalData = base64Encode(finalBinaryData);
             ws.send(`${remoteCode!}: ${finalData}`);
@@ -168,13 +164,13 @@ export default function Send(props: any) {
 
     function _connectionStatus(): JSX.Element {
         if (!WSConnected)
-            return <span style={{color: "red"}}>Disconnected</span>;
+            return <span style={{ color: "red" }}>Disconnected</span>;
         else if (WSConnected && !remoteConnected)
-            return <><span style={{color: "#FF9F00"}}>Waiting for remote connection</span> on {remoteCode}</>;    // FF9F00 is amber
+            return <><span style={{ color: "#FF9F00" }}>Waiting for remote connection</span> on {remoteCode}</>;    // FF9F00 is amber
         else if (WSConnected && remoteConnected)
-            return <><span style={{color: "green"}}>Connected</span> on {remoteCode}</>;
+            return <><span style={{ color: "green" }}>Connected</span> on {remoteCode}</>;
         else    // Should never get here
-            return <span style={{color: "red", fontWeight: "bold"}}>ERROR</span>;
+            return <span style={{ color: "red", fontWeight: "bold" }}>ERROR</span>;
     }
 
     function _dropzoneText(): JSX.Element {
@@ -200,69 +196,48 @@ export default function Send(props: any) {
                     color="text.primary"
                     align="center"
                 >
-                    <p style={{wordWrap: 'break-word'}}>{selectedFile.name}</p>
+                    <p style={{ wordWrap: 'break-word' }}>{selectedFile.name}</p>
                     <br />
-                    <p style={{wordWrap: 'break-word'}}>{getHumanReadableSize(selectedFile.size)}</p>
+                    <p style={{ wordWrap: 'break-word' }}>{getHumanReadableSize(selectedFile.size)}</p>
                 </Typography>
             );
         }
     }
 
     return (
-        <CenteredCard>
-            <div className={[styles.main, styles.maxWH].join(' ')}>
+        <Sender
+            getConnectionStatus={_connectionStatus}
+            startConnection={_startWS}
+            startUpload={_uploadHandler}
+            state={{
+                wsConnected: WSConnected,
+                remoteConnected,
+                fileSelected,
+                alreadySent
+            }}
+        >
+            <Dropzone
+                onDrop={_fileChangeHandler}
+                maxFiles={1}
+                disabled={!WSConnected}
+            >
                 {
-                    !WSConnected &&
-                    <Button 
-                        onClick={start} 
-                        size={"large"}
-                    >
-                        Start
-                    </Button>
+                    ({ getRootProps, getInputProps }: DropzoneState) => (
+                        <section className={styles.droparea}>
+                            <div className={styles.maxWH} {...getRootProps()}>
+                                <input {...getInputProps()} type="file" />
+                                <Button
+                                    className={[styles.maxWH, styles.roundButton].join(' ')}
+                                    disabled={!WSConnected}
+                                    style={{ minHeight: '200px' }}
+                                >
+                                    {_dropzoneText()}
+                                </Button>
+                            </div>
+                        </section>
+                    )
                 }
-                <h2>{_connectionStatus()}</h2>
-                <Dropzone
-                    onDrop={_fileChangeHandler}
-                    maxFiles={1}
-                    disabled={!WSConnected}
-                >
-                    {
-                        ({getRootProps, getInputProps}: DropzoneState) => (
-                            <section className={styles.droparea}>
-                                <div className={styles.maxWH} {...getRootProps()}>
-                                    <input {...getInputProps()} type="file" />
-                                    <Button
-                                        className={[styles.maxWH, styles.roundButton].join(' ')}
-                                        disabled={!WSConnected}
-                                    >
-                                        {_dropzoneText()}
-                                    </Button>
-                                </div>
-                            </section>
-                        )
-                    }
-                </Dropzone>
-                {
-                    WSConnected && 
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            padding: "1.5em"
-                        }}
-                    >
-                        <Button 
-                            onClick={_uploadHandler} 
-                            size={"large"}
-                            disabled={!remoteConnected || !fileSelected || alreadySent}
-                        >
-                            <FontAwesomeIcon icon={faPaperPlane} />
-                            <div style={{ padding: '3px' }} />
-                            Send
-                        </Button>
-                    </div>
-                }
-            </div>
-        </CenteredCard>
+            </Dropzone>
+        </Sender>          
     );
 }

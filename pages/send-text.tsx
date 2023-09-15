@@ -1,14 +1,12 @@
 import { useState, useEffect, ChangeEvent } from "react";
 
-import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 
 import { WS_URL } from "../utils/urls";
 import { removeCode } from "../utils/delete";
-import styles from "../styles/temp.module.css";
 
-import CenteredCard from "../components/CenteredCard";
 import useWindowDimensions, { MAX_MOBILE_WIDTH } from "../utils/useWindowDimensions";
+import Sender from "../components/Sender";
 
 export default function Send() {
     // Websocket data
@@ -59,12 +57,12 @@ export default function Send() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [remoteCode]);
 
-    function handleInput(e: ChangeEvent<HTMLInputElement>) {
+    function _handleInput(e: ChangeEvent<HTMLInputElement>) {
         setLocalMessage(e.target.value);
     }
 
     // Initializes Websocket
-    function start() {
+    function _startWS() {
         // Reset state
         setWS(null);
         setWSConnected(false);
@@ -112,7 +110,7 @@ export default function Send() {
         setWS(newWS);
     }
 
-    function sendMessage() {
+    function _sendMessage() {
         if (!ws) {
             console.error("WS is null!");
             return;
@@ -133,38 +131,29 @@ export default function Send() {
     }
 
     return (
-        <CenteredCard>
-            <div className={styles.main}>
-                {
-                    !WSConnected &&
-                    <Button 
-                        onClick={start} 
-                        size={"large"}
-                    >
-                        Start
-                    </Button>
-                }
-                <h2>{_connectionStatus()}</h2>
-                <TextField
-                    multiline
-                    disabled={!remoteConnected}
-                    minRows={isMobile ? 8 : 4}
-                    maxRows={13}
-                    onChange={handleInput}
-                    sx={{
-                        width: '100%',
-                        overflowY: 'auto',
-                        whiteSpace: 'pre-wrap'
-                    }}
-                />
-                <Button 
-                    onClick={sendMessage} 
-                    disabled={!remoteConnected}
-                    style={{float: 'right'}}
-                >
-                    Send
-                </Button>
-            </div>
-        </CenteredCard>
+        <Sender
+            getConnectionStatus={_connectionStatus}
+            startConnection={_startWS}
+            startUpload={_sendMessage}
+            state={{
+                wsConnected: WSConnected,
+                remoteConnected,
+                fileSelected: (localMessage !== ""),
+                alreadySent: false, // Allow multiple messages to be sent
+            }}
+        >
+            <TextField
+                multiline
+                disabled={!remoteConnected}
+                minRows={isMobile ? 8 : 4}
+                maxRows={13}
+                onChange={_handleInput}
+                sx={{
+                    width: '100%',
+                    overflowY: 'auto',
+                    whiteSpace: 'pre-wrap'
+                }}
+            />
+        </Sender>
     );
 }
